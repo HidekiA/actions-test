@@ -1,5 +1,7 @@
 name: AWS Deploy
-on: push
+on:
+  push:
+  workflow_dispatch:
 
 env:
   AWS_ROLE_ARN: arn:aws:iam::455968754607:role/GitHubActionsRole

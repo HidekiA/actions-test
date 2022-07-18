@@ -20,8 +20,12 @@ defaults:
   run:
     working-directory: api/items
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  deploy:
+  sam-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

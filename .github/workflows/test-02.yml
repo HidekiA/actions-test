@@ -1,0 +1,42 @@
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - api/items/**
+
+env:
+  AWS_REGION: ap-northeast-1
+  ACTION_ROLE: arn:aws:iam::455968754607:role/GitHubActionsRole
+  DEPLOY_ROLE: arn:aws:iam::455968754607:role/SamDeployRole
+  TEMPLATE_BUCKET: cf-templates-84095803948503984058
+  SAM_PARAMETER_FILE: parameter.toml
+  PYTHON_VERSION: "3.9"
+  STAGE_NAME: dev
+
+defaults:
+  run:
+    working-directory: api/items
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: $PYTHON_VERSION
+      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.ACTION_ROLE }}
+          aws-region: $AWS_REGION
+      - name: build
+        run: sam build --use-container
+      - name: deploy
+        run: >
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+            --role-arn $DEPLOY_ROLE
+            --s3-bucket $TEMPLATE_BUCKET
+            --config-file $SAM_PARAMETER_FILE
+            --parameter-overrides StageName=$STAGE_NAME

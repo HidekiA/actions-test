@@ -1,0 +1,14 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "DroneEC-items-dev"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-m4g0rwygegmb"
+s3_prefix = "DroneEC-items-dev"
+region = "ap-northeast-1"
+profile = "sora"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "ServiceName=\"DroneEC\" Version=\"v1\" StageName=\"dev\" ResourceName=\"items\" UseGetMethod=\"Y\" UsePostMethod=\"N\" UsePutMethod=\"N\" UseDeleteMethod=\"N\" PartitionKeyName=\"itemId\" PartitionKeyType=\"S\" SortKeyName=\"\" SortKeyType=\"S\" StreamViewType=\"\" CognitoArn=\"arn:aws:cognito-idp:ap-northeast-1:994983803536:userpool/ap-northeast-1_M5I3Hz90H\""
+image_repositories = []
+role_arn = "arn:aws:iam::455968754607:role/SamDeployRole"

@@ -1,0 +1,401 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Rest API with DynamoDB"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "API version"
+        Parameters:
+          - ServiceName
+          - Version
+          - StageName
+      - Label:
+          default: "Resource"
+        Parameters:
+          - ResourceName
+          - UseGetMethod
+          - UsePostMethod
+          - UsePutMethod
+          - UseDeleteMethod
+      - Label:
+          default: "DynamoDB attributes"
+        Parameters:
+          - PartitionKeyName
+          - PartitionKeyType
+          - SortKeyName
+          - SortKeyType
+          - StreamViewType
+      - Label:
+          default: "Resource reference"
+        Parameters:
+          - CognitoArn
+  AWS::ServerlessRepo::Application:
+    Name: rest-api-with-dynamodb
+    Description: "Rest API with DynamoDB"
+    Author: "Hideki Aoyama"
+
+Parameters:
+# API version
+  ServiceName:
+    Type: String
+    Default: DroneEC
+  Version:
+    Description: "API version [v1 | v2 | v3 | ...]"
+    Type: String
+    AllowedPattern: "v[0-9]+"
+    Default: v1
+  StageName:
+    Description: "API stage [tmp | dev | stg | prd]"
+    Type: String
+    AllowedValues:
+      - tmp
+      - dev
+      - stg
+      - prd
+    Default: tmp
+# Resource
+  ResourceName:
+    Type: String
+    Default: ""
+  UseGetMethod:
+    Description: "[Y (Yes) | N (No)] or blank (No)"
+    Type: String
+    AllowedPattern: "[Y|N]?"
+  UsePostMethod:
+    Description: "[Y (Yes) | N (No)] or blank (No)"
+    Type: String
+    AllowedPattern: "[Y|N]?"
+  UsePutMethod:
+    Description: "[Y (Yes) | N (No)] or blank (No)"
+    Type: String
+    AllowedPattern: "[Y|N]?"
+  UseDeleteMethod:
+    Description: "[Y (Yes) | N (No)] or blank (No)"
+    Type: String
+    AllowedPattern: "[Y|N]?"
+# DynamoDB
+  PartitionKeyName:
+    Type: String
+    Default: ""
+  PartitionKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  SortKeyName:
+    Description: "Keep blank to disable sort key"
+    Type: String
+    Default: ""
+  SortKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  StreamViewType:
+    Description: "Blank or [KEYS_ONLY | NEW_AND_OLD_IMAGES | NEW_IMAGE | OLD_IMAGE]"
+    Type: String
+    AllowedValues:
+      - ""
+      - KEYS_ONLY
+      - NEW_AND_OLD_IMAGES
+      - NEW_IMAGE
+      - OLD_IMAGE
+# Resource
+  CognitoArn:
+    Description: "Cognito ARN for API auth"
+    Type: String
+    Default: arn:aws:cognito-idp:ap-northeast-1:994983803536:userpool/ap-northeast-1_M5I3Hz90H
+
+
+Mappings:
+  Function:
+    DeploymentPreference:
+      tmp: AllAtOnce
+      dev: AllAtOnce
+      stg: AllAtOnce
+      prd: Canary10Percent10Minutes
+    Timeout:
+      tmp: 10
+      dev: 10
+      stg: 10
+      prd: 10
+    PowerToolsLoggerLogEvent:
+      tmp: "True"
+      dev: "True"
+      stg: "False"
+      prd: "False"
+    LogLevel:
+      tmp: DEBUG
+      dev: DEBUG
+      stg: INFO
+      prd: INFO
+  LogGroup:
+    RetentionInDays:
+      tmp: 30
+      dev: 30
+      stg: 30
+      prd: 365
+  API:
+    ApiMappingDomainName:
+      tmp: ""
+      dev: "api.sorakarabin.panasonic-esl.com"
+      stg: "api.sorakarabin-stg.com"
+      prd: "api.sorakarabin.com"
+    AllowOrigin:
+      tmp: "*"
+      dev: "*"
+      stg: "https://www.sorakarabin-stg.com"
+      prd: "https://www.sorakarabin.com"
+
+
+Conditions:
+  UseGet: !Equals [!Ref UseGetMethod, "Y"]
+  UsePost: !Equals [!Ref UsePostMethod, "Y"]
+  UsePut: !Equals [!Ref UsePutMethod, "Y"]
+  UseDelete: !Equals [!Ref UseDeleteMethod, "Y"]
+  UseApiMapping: !Not [!Equals [!FindInMap [API, ApiMappingDomainName, !Ref StageName], ""]]
+  UseTableSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
+  UseTableStream: !Not [!Equals [!Ref StreamViewType, ""]]
+
+
+Globals:
+  Function:
+    Handler: app.lambda_handler
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+    Tracing: Active
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Type: !FindInMap [Function, DeploymentPreference, !Ref StageName]
+    Timeout: !FindInMap [Function, Timeout, !Ref StageName]
+    Layers:
+      - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:19
+    Environment:
+      Variables:
+      # AWS Lambda Powertools
+        POWERTOOLS_SERVICE_NAME:
+          !Sub ${ServiceName}-${ResourceName}-${Version}
+        POWERTOOLS_LOGGER_LOG_EVENT:
+          !FindInMap [Function, PowerToolsLoggerLogEvent, !Ref StageName]
+        LOG_LEVEL:
+          !FindInMap [Function, LogLevel, !Ref StageName]
+        CORS_ORIGIN:
+          !FindInMap [API, AllowOrigin, !Ref StageName]
+        BASE_PATH:
+          !If
+            - UseApiMapping
+            - !Sub /${Version}/${ResourceName}
+            - ""
+      # DynamoDB
+        TABLE_NAME:
+          !Ref MyTable
+        PARTITION_KEY:
+          !Ref PartitionKeyName
+        SORT_KEY:
+          !Ref SortKeyName
+
+
+Resources:
+# Lambda
+  FunctionGet:
+    Type: AWS::Serverless::Function
+    Condition: UseGet
+    Properties:
+      CodeUri: src-get/
+      FunctionName: !Sub ${AWS::StackName}-get
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MyTable
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Method: get
+            RestApiId: !Ref MyApi
+            Path: /
+  FunctionPost:
+    Type: AWS::Serverless::Function
+    Condition: UsePost
+    Properties:
+      CodeUri: src-post/
+      FunctionName: !Sub ${AWS::StackName}-post
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MyTable
+      Events:
+        Post:
+          Type: Api
+          Properties:
+            Method: post
+            RestApiId: !Ref MyApi
+            Path: /
+  FunctionPut:
+    Type: AWS::Serverless::Function
+    Condition: UsePut
+    Properties:
+      CodeUri: src-put/
+      FunctionName: !Sub ${AWS::StackName}-put
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MyTable
+      Events:
+        Put:
+          Type: Api
+          Properties:
+            Method: put
+            RestApiId: !Ref MyApi
+            Path: /
+  FunctionDelete:
+    Type: AWS::Serverless::Function
+    Condition: UseDelete
+    Properties:
+      CodeUri: src-delete/
+      FunctionName: !Sub ${AWS::StackName}-delete
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MyTable
+      Events:
+        Delete:
+          Type: Api
+          Properties:
+            Method: delete
+            RestApiId: !Ref MyApi
+            Path: /
+
+  FunctionLogGroupGet:
+    Type: AWS::Logs::LogGroup
+    Condition: UseGet
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FunctionGet}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+  FunctionLogGroupPost:
+    Type: AWS::Logs::LogGroup
+    Condition: UsePost
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FunctionPost}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+  FunctionLogGroupPut:
+    Type: AWS::Logs::LogGroup
+    Condition: UsePut
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FunctionPut}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+  FunctionLogGroupDelete:
+    Type: AWS::Logs::LogGroup
+    Condition: UseDelete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FunctionDelete}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+
+# API Gateway
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}
+      StageName: !Ref StageName
+      Auth:
+        Authorizers:
+          MyCognitoAuth:
+            UserPoolArn: !Ref CognitoArn
+        DefaultAuthorizer: MyCognitoAuth
+        AddDefaultAuthorizerToCorsPreflight: false
+        # ResourcePolicy:
+        #   IpRangeWhitelist:
+        #     - "x.x.x.x/32"
+      Cors:
+        AllowOrigin:
+          Fn::Sub:
+            - "'${Origin}'"
+            - Origin: !FindInMap [API, AllowOrigin, !Ref StageName]
+        AllowCredentials: true
+        AllowMethods: "'*'"
+        AllowHeaders: "'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key'"
+      DisableExecuteApiEndpoint: !If [UseApiMapping, true, false]
+      TracingEnabled: true
+  
+  MyApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: UseApiMapping
+    Properties:
+      DomainName: !FindInMap [API, ApiMappingDomainName, !Ref StageName]
+      ApiMappingKey: !Sub ${Version}/${ResourceName}
+      ApiId: !Ref MyApi
+      Stage: !Ref MyApi.Stage
+
+# DynamoDB
+  MyTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${AWS::StackName}
+      AttributeDefinitions:
+        - AttributeName: !Ref PartitionKeyName
+          AttributeType: !Ref PartitionKeyType
+        - !If
+          - UseTableSortKey
+          - AttributeName: !Ref SortKeyName
+            AttributeType: !Ref SortKeyType
+          - !Ref AWS::NoValue
+      KeySchema:
+        - AttributeName: !Ref PartitionKeyName
+          KeyType: HASH # Partition key
+        - !If
+          - UseTableSortKey
+          - AttributeName: !Ref SortKeyName
+            KeyType: RANGE # Sort key
+          - !Ref AWS::NoValue
+      TableClass: STANDARD
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      ContributorInsightsSpecification:
+        Enabled: false
+      StreamSpecification:
+        !If
+          - UseTableStream
+          - StreamViewType: !Ref StreamViewType
+          - !Ref AWS::NoValue
+
+
+Outputs:
+# API
+  ApiID:
+    Description: "API Gateway ID"
+    Value: !Ref MyApi
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiID"
+  ApiEndpoint:
+    Description: "Endpoint URL"
+    Value:
+      Fn::If:
+        - UseApiMapping
+        - Fn::Sub:
+          - "https://${ApiDomain}/${Version}/${ResourceName}/"
+          - ApiDomain: !FindInMap [API, ApiMappingDomainName, !Ref StageName]
+            Version: !Ref Version
+            ResourceName: !Ref ResourceName
+        - !Sub "https://${MyApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-URL"
+# DynamoDB
+  DynamoDBTableName:
+    Description: "DynamoDB Table name"
+    Value: !Ref MyTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TableName"
+  DynamoDBTableArn:
+    Description: "DynamoDB Table ARN"
+    Value: !GetAtt MyTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableArn"
+  DynamoDBStreamArn:
+    Description: "DynamoDB Stream ARN"
+    Condition: UseTableStream
+    Value: !GetAtt MyTable.StreamArn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableStreamArn"

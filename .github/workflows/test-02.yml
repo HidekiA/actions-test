@@ -37,6 +37,8 @@ jobs:
         with:
           role-to-assume: ${{ env.ACTION_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
+      - run: ls
+      - run: aws sts get-caller-identity
       - name: build
         run: sam build --use-container
       - name: deploy

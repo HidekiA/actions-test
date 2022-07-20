@@ -42,7 +42,7 @@ jobs:
       - name: s3-test
         run: aws s3api put-object --bucket ${{ env.TEMPLATE_BUCKET }} --key test2a --body parameter.toml
       - name: build
-        run: sam build --use-container
+        run: sam build
       - name: deploy
         run: >
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload

@@ -49,4 +49,3 @@ jobs:
             --role-arn ${{ env.DEPLOY_ROLE }}
             --s3-bucket ${{ env.TEMPLATE_BUCKET }}
             --config-file ${{ env.SAM_PARAMETER_FILE }}
-            --parameter-overrides StageName=${{ env.STAGE_NAME }}

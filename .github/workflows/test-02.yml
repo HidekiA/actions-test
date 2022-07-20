@@ -37,12 +37,15 @@ jobs:
         with:
           role-to-assume: ${{ env.ACTION_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: ls
+      - run: ls -aR
       - run: aws sts get-caller-identity
+      - run: aws --version
+      - run: sam --version
       - name: s3-test
         run: aws s3api put-object --bucket ${{ env.TEMPLATE_BUCKET }} --key test2a --body parameter.toml
       - name: build
         run: sam build
+      - run: ls -aR
       - name: deploy
         run: >
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload

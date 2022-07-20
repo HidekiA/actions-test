@@ -39,11 +39,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - run: ls
       - run: aws sts get-caller-identity
+      - name: s3-test
+        run: aws s3api put-object --bucket ${{ env.TEMPLATE_BUCKET }} --key test2a --body parameter.toml
       - name: build
         run: sam build --use-container
       - name: deploy
         run: >
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload
             --role-arn ${{ env.DEPLOY_ROLE }}
             --s3-bucket ${{ env.TEMPLATE_BUCKET }}
             --config-file ${{ env.SAM_PARAMETER_FILE }}

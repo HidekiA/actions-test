@@ -63,18 +63,22 @@ Parameters:
     Description: "[Y (Yes) | N (No)] or blank (No)"
     Type: String
     AllowedPattern: "[Y|N]?"
+    Default: Y
   UsePostMethod:
     Description: "[Y (Yes) | N (No)] or blank (No)"
     Type: String
     AllowedPattern: "[Y|N]?"
+    Default: N
   UsePutMethod:
     Description: "[Y (Yes) | N (No)] or blank (No)"
     Type: String
     AllowedPattern: "[Y|N]?"
+    Default: N
   UseDeleteMethod:
     Description: "[Y (Yes) | N (No)] or blank (No)"
     Type: String
     AllowedPattern: "[Y|N]?"
+    Default: N
 # DynamoDB
   PartitionKeyName:
     Type: String
@@ -102,6 +106,7 @@ Parameters:
       - NEW_AND_OLD_IMAGES
       - NEW_IMAGE
       - OLD_IMAGE
+    Default: ""
 # Resource
   CognitoArn:
     Description: "Cognito ARN for API auth"

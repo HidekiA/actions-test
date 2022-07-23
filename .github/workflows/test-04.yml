@@ -11,6 +11,7 @@ env:
   STACK_NAME: items
   AWS_REGION: ap-northeast-1
   CAPABILITIES: CAPABILITY_IAM
+  COGNITO_USER_POOL: user
   # ACTION_ROLE: arn:aws:iam::455968754607:role/GitHubActionsRole
   # DEPLOY_ROLE: arn:aws:iam::455968754607:role/SamDeployRole
   # TEMPLATE_BUCKET: cf-templates-84095803948503984058
@@ -52,12 +53,18 @@ jobs:
       - name: build
         run: sam build
       - name: deploy
-        run: >-
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload 
-            --role-arn ${{ secrets.DEPLOY_ROLE }} 
-            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} 
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" 
-            --capabilities ${{ env.CAPABILITIES }} 
-            --parameter-overrides `cat parameters.txt | 
-              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | 
-              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ secrets.COGNITO_ARN_USER }} @g'`
+        env:
+          COGNITO_ARN: >-
+            ${{ 
+              (env.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || 
+              (env.COGNITO_USER_POOL == 'shop' && 'value2') 
+            }}
+        run: |-
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" \
+            --capabilities ${{ env.CAPABILITIES }} \
+            --parameter-overrides `cat parameters.txt | \
+              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
+              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=$COGNITO_ARN @g'`

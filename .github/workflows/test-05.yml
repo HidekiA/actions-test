@@ -18,6 +18,7 @@ env:
   PYTHON_VERSION: "3.9"
   STACK_NAME_PREFIX: cicd-api-
   TEST_ENV: PREFIX
+  COGNITO_USER_POOL: user
   
 
 defaults:
@@ -36,4 +37,7 @@ jobs:
       # name: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
-      - run: echo ${{ env.STACK_NAME_${{ env.TEST_ENV }} }}
+      - name: Echo env
+        run: echo $MY_ENV
+        env:
+          MY_ENV: ${{ (env.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || (env.COGNITO_USER_POOL == 'shop' && 'value2')  }}

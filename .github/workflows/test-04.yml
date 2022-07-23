@@ -30,6 +30,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: develop
       # name: ${{ github.ref_name }}

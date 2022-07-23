@@ -1,10 +1,5 @@
 name: map test
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - api/items/**
   workflow_dispatch:
 
 env:

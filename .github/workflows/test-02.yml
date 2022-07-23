@@ -1,4 +1,4 @@
-name: sam test
+name: sam test no secrets
 on:
   push:
     branches:

@@ -31,7 +31,7 @@ def get():
     data = table.scan(
         FilterExpression=Attr('visible').eq(True)
     )
-    logger.debug(data)
+    # logger.debug(data)
     
     for x in data['Items']:
         del x['visible']

@@ -22,4 +22,3 @@ jobs:
       - uses: actions/checkout@v3
       - run: echo ${{ github.action }}
       - run: ls
-        working-directory: a

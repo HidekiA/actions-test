@@ -31,7 +31,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     environment:
       name: develop
       # name: ${{ github.ref_name }}
@@ -60,6 +60,7 @@ jobs:
               (env.COGNITO_USER_POOL == 'shop' && 'value2') 
             }}
         run: |-
+          echo \
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
@@ -67,4 +68,4 @@ jobs:
             --capabilities ${{ env.CAPABILITIES }} \
             --parameter-overrides `cat parameters.txt | \
               sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
-              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=$COGNITO_ARN @g'`
+              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ COGNITO_ARN }} @g'`

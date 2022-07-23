@@ -1,0 +1,28 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-user-dev-45217-authRole",
+      "UnauthRoleArn": "arn:aws:iam::455968754607:role/amplify-user-dev-45217-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::455968754607:role/amplify-user-dev-45217-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-user-dev-45217-deployment",
+      "UnauthRoleName": "amplify-user-dev-45217-unauthRole",
+      "StackName": "amplify-user-dev-45217",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:455968754607:stack/amplify-user-dev-45217/f9668ec0-0ac0-11ed-a04b-0649d22cdb87",
+      "AmplifyAppId": "d2wwe2anybfiny",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-user-dev-45217-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+    },
+    "categories": {
+      "auth": {
+        "user": {}
+      },
+      "function": {
+        "userPreSignup": {
+          "DOMAINALLOWLIST": "jp.panasonic.com,sorakarabin.com,persol-avct.co.jp",
+          "deploymentBucketName": "amplify-user-dev-45217-deployment",
+          "s3Key": "amplify-builds/userPreSignup-6c484b30434258517077-build.zip"
+        }
+      }
+    }
+  }
+}

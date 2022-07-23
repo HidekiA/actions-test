@@ -13,8 +13,8 @@ jobs:
       name: develop
     steps:
       - uses: actions/checkout@v3
-      - name: test
-        run: echo $GITHUB_ACTION
+      - run: echo "$GITHUB_ACTION"
+      - run: echo ${{ $GITHUB_ACTION }}
       - run: ls
       - run: ls
-        working-directory: api/$GITHUB_ACTION
+        working-directory: "api/$GITHUB_ACTION"

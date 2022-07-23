@@ -13,7 +13,7 @@ env:
 
 jobs:
   sam-deploy:
-    uses: HidekiA/actions-test/.github/workflows/sam-deploy.yml
+    uses: ./.github/workflows/sam-deploy.yml
     with:
       API_NAME: ${{ env.API_NAME }}
       COGNITO_USER_POOL: ${{ env.COGNITO_USER_POOL }}

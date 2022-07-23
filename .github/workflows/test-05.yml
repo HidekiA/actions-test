@@ -1,0 +1,39 @@
+name: map test
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - api/items/**
+  workflow_dispatch:
+
+env:
+  STACK_NAME: items
+  AWS_REGION: ap-northeast-1
+  CAPABILITIES: CAPABILITY_IAM
+  # ACTION_ROLE: arn:aws:iam::455968754607:role/GitHubActionsRole
+  # DEPLOY_ROLE: arn:aws:iam::455968754607:role/SamDeployRole
+  # TEMPLATE_BUCKET: cf-templates-84095803948503984058
+  STAGE_NAME: dev
+  PYTHON_VERSION: "3.9"
+  STACK_NAME_PREFIX: cicd-api-
+  TEST_ENV: PREFIX
+  
+
+defaults:
+  run:
+    working-directory: api/items
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: develop
+      # name: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo ${{ env.STACK_NAME_${{ env.TEST_ENV }} }}

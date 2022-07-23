@@ -31,8 +31,6 @@ jobs:
     environment:
       name: develop
     steps:
-      - run: echo ${{ github.ref_name }}
-      - run: echo ${{ github.ref }}
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
@@ -49,6 +47,8 @@ jobs:
           aws sts get-caller-identity
       - name: build
         run: sam build
+      - run: echo ${{ github.ref_name }}
+      - run: echo ${{ github.ref }}
       - name: deploy
         run: |
           echo \

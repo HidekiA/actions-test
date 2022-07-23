@@ -7,14 +7,14 @@ on:
       - api/items/**
   workflow_dispatch:
 
-env:
-  API_NAME: items
-  COGNITO_USER_POOL: user
+# env:
+#   API_NAME: items
+#   COGNITO_USER_POOL: user
 
 jobs:
   sam-deploy:
     uses: ./.github/workflows/sam-deploy.yml
     with:
-      API_NAME: ${{ env.API_NAME }}
-      COGNITO_USER_POOL: ${{ env.COGNITO_USER_POOL }}
+      API_NAME: items
+      COGNITO_USER_POOL: user
     secrets: inherit

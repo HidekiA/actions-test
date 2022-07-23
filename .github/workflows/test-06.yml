@@ -14,10 +14,15 @@ jobs:
       name: develop
     steps:
       - uses: actions/checkout@v3
-      - run: echo $GITHUB_ACTION
       - run: echo ${{ github.action }}
-      - run: echo ${{ github.GITHUB_ACTION }}
-      - run: echo ${{ env.GITHUB_ACTION }}
+      - run: echo ${{ github.action_ref }}
+      - run: echo ${{ github.action_repository }}
+      - run: echo ${{ github.actor }}
+      - run: echo ${{ github.api_url }}
+      - run: echo ${{ github.env }}
+      - run: echo ${{ github.event_name }}
+      - run: echo ${{ github.event_path }}
+      - run: echo ${{ github.head_ref }}
+      - run: echo ${{ github.job }}
+      - run: echo ${{ github.path }}
       - run: ls
-      - run: ls
-        working-directory: api/$GITHUB_ACTION

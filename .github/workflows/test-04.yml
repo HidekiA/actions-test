@@ -68,4 +68,4 @@ jobs:
             --capabilities ${{ env.CAPABILITIES }} \
             --parameter-overrides `cat parameters.txt | \
               sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
-              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ COGNITO_ARN }} @g'`
+              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ env.COGNITO_ARN }} @g'`

@@ -1,0 +1,63 @@
+name: sam test
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - api/items/**
+  workflow_dispatch:
+
+env:
+  STACK_NAME: items
+  AWS_REGION: ap-northeast-1
+  CAPABILITIES: CAPABILITY_IAM
+  # ACTION_ROLE: arn:aws:iam::455968754607:role/GitHubActionsRole
+  # DEPLOY_ROLE: arn:aws:iam::455968754607:role/SamDeployRole
+  # TEMPLATE_BUCKET: cf-templates-84095803948503984058
+  STAGE_NAME: dev
+  PYTHON_VERSION: "3.9"
+
+defaults:
+  run:
+    working-directory: api/items
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: develop
+    steps:
+      - name: echo ${{ github.ref_name }}
+      - name: echo ${{ github.ref }}
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secret.ACTION_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: cli version & id
+        run: |
+          aws --version
+          sam --version
+          aws sts get-caller-identity
+      - name: build
+        run: sam build
+      - name: deploy
+        run: |
+          echo \
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
+            --role-arn ${{ secret.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secret.TEMPLATE_BUCKET }} \
+            --stack-name "api-${{ STACK_NAME }}" \
+            --capabilities ${{ env.CAPABILITIES }} \
+            --parameter-overrides `cat parameters.txt | \
+              sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | \
+              sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secret.COGNITO_ARN_USER }} /g'`
+      - name: echo ${{ github }}

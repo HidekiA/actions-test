@@ -55,7 +55,7 @@ jobs:
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --stack-name "api-${{ STACK_NAME }}" \
+            --stack-name "api-${{ env.STACK_NAME }}" \
             --capabilities ${{ env.CAPABILITIES }} \
             --parameter-overrides `cat parameters.txt | \
               sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | \

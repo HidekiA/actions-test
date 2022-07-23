@@ -1,29 +1,6 @@
 name: sam deploy
 on:
-  # workflow_call:
-  #   inputs:
-  #     API_NAME:
-  #       type: string
-  #       required: true
-  #     AWS_REGION:
-  #       type: string
-  #       default: ap-northeast-1
-  #       required: false
-  #     SAM_CAPABILITIES:
-  #       type: string
-  #       default: CAPABILITY_IAM
-  #       required: false
-  #     COGNITO_USER_POOL:
-  #       description: user | shop
-  #       type: string
-  #       required: true
-  #   secrets:
-  #     ACTION_ROLE:
-  #     DEPLOY_ROLE:
-  #     TEMPLATE_BUCKET:
-  #     COGNITO_ARN_USER:
-  #     COGNITO_ARN_SHOP:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       API_NAME:
         type: string
@@ -40,6 +17,34 @@ on:
         description: user | shop
         type: string
         required: true
+    secrets:
+      ACTION_ROLE:
+        required: true
+      DEPLOY_ROLE:
+        required: true
+      TEMPLATE_BUCKET:
+        required: true
+      COGNITO_ARN_USER:
+        required: true
+      COGNITO_ARN_SHOP:
+        required: true
+  # workflow_dispatch:
+  #   inputs:
+  #     API_NAME:
+  #       type: string
+  #       required: true
+  #     AWS_REGION:
+  #       type: string
+  #       default: ap-northeast-1
+  #       required: false
+  #     SAM_CAPABILITIES:
+  #       type: string
+  #       default: CAPABILITY_IAM
+  #       required: false
+  #     COGNITO_USER_POOL:
+  #       description: user | shop
+  #       type: string
+  #       required: true
 
 env:
   # API_NAME: items

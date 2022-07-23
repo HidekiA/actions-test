@@ -10,14 +10,15 @@ permissions:
   id-token: write
   contents: read
 
+defaults:
+  run:
+    working-directory: api/${{ env.API_NAME }}
+    
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
       name: develop
-    defaults:
-      run:
-        working-directory: api/${{ env.API_NAME }}
     steps:
       - uses: actions/checkout@v3
       - run: echo ${{ github.action }}

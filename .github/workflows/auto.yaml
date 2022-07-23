@@ -1,4 +1,4 @@
-name: items
+name: test trigger
 on:
   workflow_dispatch:
   push:

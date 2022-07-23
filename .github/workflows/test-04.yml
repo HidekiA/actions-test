@@ -45,19 +45,19 @@ jobs:
           role-to-assume: ${{ secrets.ACTION_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
       - name: cli version & id
-        run: |
+        run: |-
           aws --version
           sam --version
           aws sts get-caller-identity
       - name: build
         run: sam build
       - name: deploy
-        run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
-            --role-arn ${{ secrets.DEPLOY_ROLE }} \
-            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" \
-            --capabilities ${{ env.CAPABILITIES }} \
-            --parameter-overrides `cat parameters.txt | \
-              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
+        run: >-
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload 
+            --role-arn ${{ secrets.DEPLOY_ROLE }} 
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} 
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" 
+            --capabilities ${{ env.CAPABILITIES }} 
+            --parameter-overrides `cat parameters.txt | 
+              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | 
               sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ secrets.COGNITO_ARN_USER }} @g'`

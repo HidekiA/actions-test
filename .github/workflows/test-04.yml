@@ -31,8 +31,8 @@ jobs:
     environment:
       name: develop
     steps:
-      - name: echo ${{ github.ref_name }}
-      - name: echo ${{ github.ref }}
+      - run: echo ${{ github.ref_name }}
+      - run: echo ${{ github.ref }}
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
@@ -60,4 +60,4 @@ jobs:
             --parameter-overrides `cat parameters.txt | \
               sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | \
               sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secret.COGNITO_ARN_USER }} /g'`
-      - name: echo ${{ github }}
+      - run: echo ${{ github }}

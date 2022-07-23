@@ -1,7 +1,9 @@
 on:
   push:
     branches:
-      - develop
+      - dev
+      - stg
+      - prd
     paths:
       - api/items/**
   workflow_dispatch:

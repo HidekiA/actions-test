@@ -4,20 +4,20 @@ on:
   workflow_call:
     inputs:
       API_NAME:
-        type: string
         required: true
+        type: string
       COGNITO_USER_POOL:
-        description: user | shop
-        type: string
         required: true
+        type: string
+        description: user | shop
       AWS_REGION:
+        required: false
         type: string
         default: ap-northeast-1
-        required: false
       SAM_CAPABILITIES:
+        required: false
         type: string
         default: CAPABILITY_IAM
-        required: false
     secrets:
       ACTION_ROLE:
         required: true
@@ -32,7 +32,7 @@ on:
 
 
 env:
-  STAGE_NAME: dev
+  # STAGE_NAME: dev
   PYTHON_VERSION: "3.9"
   STACK_NAME_PREFIX: cicd-api-
   PARAMETER_FILE: parameters.txt
@@ -48,20 +48,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
-      name: develop
-      # name: ${{ github.ref_name }}
+      # name: develop
+      name: ${{ github.ref_name }}
     defaults:
       run:
         working-directory: api/${{ inputs.API_NAME }}
     steps:
       - uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
       - uses: aws-actions/setup-sam@v2
-
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }}
@@ -87,9 +84,9 @@ jobs:
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME }}/" \
+            --s3-prefix "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ github.ref_name }}" \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
-              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
+              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ github.ref_name }} @g' | \
               sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ env.COGNITO_ARN }} @g'`

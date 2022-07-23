@@ -1,16 +1,34 @@
+name: sam deploy
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - api/items/**
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      API_NAME:
+        type: string
+        required: true
+      AWS_REGION:
+        type: string
+        default: ap-northeast-1
+        required: false
+      SAM_CAPABILITIES:
+        type: string
+        default: CAPABILITY_IAM
+        required: false
+      COGNITO_USER_POOL:
+        description: user | shop
+        type: string
+        required: true
+    secrets:
+      ACTION_ROLE:
+      DEPLOY_ROLE:
+      TEMPLATE_BUCKET:
+      COGNITO_ARN_USER:
+      COGNITO_ARN_SHOP:
 
 env:
-  API_NAME: items
-  AWS_REGION: ap-northeast-1
-  CAPABILITIES: CAPABILITY_IAM
-  COGNITO_USER_POOL: user
+  # API_NAME: items
+  # AWS_REGION: ap-northeast-1
+  # CAPABILITIES: CAPABILITY_IAM
+  # COGNITO_USER_POOL: user
 
   STAGE_NAME: dev
   PYTHON_VERSION: "3.9"
@@ -31,7 +49,7 @@ jobs:
       # name: ${{ github.ref_name }}
     defaults:
       run:
-        working-directory: api/${{ env.API_NAME }}
+        working-directory: api/${{ inputs.API_NAME }}
     steps:
       - uses: actions/checkout@v3
 
@@ -44,7 +62,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.AWS_REGION }}
 
       - name: cli version & id
         run: |-
@@ -59,15 +77,18 @@ jobs:
         env:
           COGNITO_ARN: >-
             ${{ 
-              (env.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || 
-              (env.COGNITO_USER_POOL == 'shop' && secrets.COGNITO_ARN_SHOP) 
+              (inputs.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || 
+              (inputs.COGNITO_USER_POOL == 'shop' && secrets.COGNITO_ARN_SHOP) 
             }}
         run: |-
+          echo \
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.API_NAME }}" \
-            --capabilities ${{ env.CAPABILITIES }} \
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
+            --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
               sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
               sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ env.COGNITO_ARN }} @g'`
+
+      - run: echo ${{ github.ref_name }}

@@ -1,0 +1,20 @@
+name: items
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: develop
+    steps:
+      - uses: actions/checkout@v3
+      - name: test
+        run: echo ${{ github.action }}
+      - run: ls
+      - run: ls
+        working-directory: api/${{ github.action }}

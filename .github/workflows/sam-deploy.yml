@@ -32,7 +32,6 @@ on:
 
 
 env:
-  # STAGE_NAME: dev
   PYTHON_VERSION: "3.9"
   STACK_NAME_PREFIX: cicd-api-
   PARAMETER_FILE: parameters.txt
@@ -48,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
-      # name: develop
       name: ${{ github.ref_name }}
     defaults:
       run:

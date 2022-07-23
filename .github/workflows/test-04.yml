@@ -16,6 +16,8 @@ env:
   # TEMPLATE_BUCKET: cf-templates-84095803948503984058
   STAGE_NAME: dev
   PYTHON_VERSION: "3.9"
+  STACK_NAME_PREFIX: cicd-api-
+  
 
 defaults:
   run:
@@ -30,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: develop
+      # name: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -47,17 +50,12 @@ jobs:
           aws sts get-caller-identity
       - name: build
         run: sam build
-      - run: echo ${{ github.ref_name }}
-      - run: echo ${{ github.ref }}
       - name: deploy
         run: |
           echo \
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --stack-name "api-${{ env.STACK_NAME }}" \
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" \
             --capabilities ${{ env.CAPABILITIES }} \
-            --parameter-overrides `cat parameters.txt | \
-              sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | \
-              sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secrets.COGNITO_ARN_USER }} /g'`
-      - run: echo ${{ github }}
+            --parameter-overrides `cat parameters.txt | sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secrets.COGNITO_ARN_USER }} /g'`

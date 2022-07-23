@@ -40,7 +40,7 @@ jobs:
       - uses: aws-actions/setup-sam@v2
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secret.ACTION_ROLE }}
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
       - name: cli version & id
         run: |
@@ -53,11 +53,11 @@ jobs:
         run: |
           echo \
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
-            --role-arn ${{ secret.DEPLOY_ROLE }} \
-            --s3-bucket ${{ secret.TEMPLATE_BUCKET }} \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --stack-name "api-${{ STACK_NAME }}" \
             --capabilities ${{ env.CAPABILITIES }} \
             --parameter-overrides `cat parameters.txt | \
               sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | \
-              sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secret.COGNITO_ARN_USER }} /g'`
+              sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secrets.COGNITO_ARN_USER }} /g'`
       - run: echo ${{ github }}

@@ -58,4 +58,6 @@ jobs:
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ env.STACK_NAME }}" \
             --capabilities ${{ env.CAPABILITIES }} \
-            --parameter-overrides `cat parameters.txt | sed -e 's/StageName=[^\f\n\r\t$]*/StageName=${{ env.STAGE_NAME }} /g' | sed -e 's/CognitoArn=[^\f\n\r\t$]*/CognitoArn=${{ secrets.COGNITO_ARN_USER }} /g'`
+            --parameter-overrides `cat parameters.txt | \
+              sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ env.STAGE_NAME }} @g' | \
+              sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ secrets.COGNITO_ARN_USER }} @g'`

@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: echo "$GITHUB_ACTION"
-      - run: echo ${{ $GITHUB_ACTION }}
       - run: ls
       - run: ls
         working-directory: "api/$GITHUB_ACTION"

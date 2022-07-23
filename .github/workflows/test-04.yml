@@ -60,7 +60,6 @@ jobs:
               (env.COGNITO_USER_POOL == 'shop' && 'value2') 
             }}
         run: |-
-          echo \
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \

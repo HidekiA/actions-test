@@ -18,7 +18,7 @@ env:
   PYTHON_VERSION: "3.9"
   STACK_NAME_PREFIX: cicd-api-
   TEST_ENV: PREFIX
-  COGNITO_USER_POOL: user
+  COGNITO_USER_POOL: shop
   
 
 defaults:

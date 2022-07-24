@@ -1,5 +1,9 @@
+name: api/items
+
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - dev
       - stg
@@ -10,6 +14,7 @@ on:
 
 jobs:
   sam-deploy:
+    if: github.event.pull_request.merged == true
     uses: ./.github/workflows/sam-deploy.yml
     with:
       API_NAME: items

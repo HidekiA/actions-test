@@ -10,7 +10,7 @@ on:
 
 jobs:
   sam-deploy:
-    if: github.event.pull_request.merged == true || github.event_name != pull_request
+    if: github.event.pull_request.merged == true || github.event_name != "pull_request"
     uses: ./.github/workflows/sam-deploy.yml
     with:
       API_NAME: items

@@ -85,10 +85,9 @@ jobs:
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --force-upload \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ github.ref_name }}/" \
+            --s3-prefix "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ github.ref_name }}" \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
               sed -e 's@StageName=[^\f\n\r\t$]*@StageName=${{ github.ref_name }} @g' | \
-              sed -e 's@LambdaRuntime=[^\f\n\r\t$]*@LambdaRuntime=python${{ inputs.PYTHON_VERSION }} @g' | \
               sed -e 's@CognitoArn=[^\f\n\r\t$]*@CognitoArn=${{ env.COGNITO_ARN }} @g'`

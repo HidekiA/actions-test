@@ -1,4 +1,4 @@
-ServiceName=DroneEC
+ServiceName=sorakarabin
 Version=v1
 StageName=dev
 ResourceName=items
@@ -6,6 +6,7 @@ UseGetMethod=Y
 UsePostMethod=N
 UsePutMethod=N
 UseDeleteMethod=N
+LambdaRuntime=python3.9
 PartitionKeyName=itemId
 PartitionKeyType=S
 SortKeyName=""

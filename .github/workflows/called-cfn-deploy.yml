@@ -81,3 +81,5 @@ jobs:
           RESULT: ${{ steps.changeset.outputs.result }}
         run: >-
           echo $RESULT
+          echo ${{ env.RESULT }}
+          echo ${{ steps.changeset.outputs.result }}

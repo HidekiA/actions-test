@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
-      name: ${{ github.ref_name }}
+      name: ${{ github.event.pull_request.base.ref }}
     defaults:
       run:
         working-directory: ${{ inputs.WORKING_DIRECTORY }}

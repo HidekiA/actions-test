@@ -15,7 +15,6 @@ on:
         description: deploy
   pull_request:
     types: [opened, reopened, synchronize, closed]
-    branches: [dev, stg, prd]
     paths:
       - iac/test-cfn/**
 

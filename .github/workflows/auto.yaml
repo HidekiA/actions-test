@@ -3,14 +3,18 @@ on:
   workflow_dispatch:
   push:
   pull_request:
-    types:
-      - closed
+    types: [opened, reopened, synchronize, closed]
 
 jobs:
   echo_event_name:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ github.event_name }}
+      - name: event_name
+        run: echo ${{ github.event_name }}
+      - name: ref_name
+        run: echo ${{ github.ref_name }}
+      - name: github.event.pull_request.merged
+        run: echo ${{ github.event.pull_request.merged }}
 
   if_merged:
     if: github.event.pull_request.merged == true

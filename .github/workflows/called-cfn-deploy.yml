@@ -64,7 +64,7 @@ jobs:
       - name: create changeset
         id: changeset
         run: |-
-          CS=`\
+          echo "CHANGESET<<EOF" >> $GITHUB_ENV
           aws cloudformation deploy \
             --no-execute-changeset \
             --no-fail-on-empty-changeset \
@@ -74,12 +74,13 @@ jobs:
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ github.ref_name }}" \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
-            --parameter-overrides StageName=${{ github.ref_name }}`
-          echo CS="$CS" >> $GITHUB_ENV
+            --parameter-overrides StageName=${{ github.ref_name }} \
+            >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: show changeset
         env:
           RESULT: ${{ steps.changeset.outputs.result }}
         run: |-
-          echo ${{ env.CS }}
+          echo ${{ env.CHANGESET }}
           echo ${{ steps.changeset.outputs.result }}

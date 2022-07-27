@@ -76,7 +76,7 @@ jobs:
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides StageName=${{ github.ref_name }}`
-          echo "CS=$CS" >> $GITHUB_ENV
+          echo CS="$CS" >> $GITHUB_ENV
 
       - name: show changeset
         env:

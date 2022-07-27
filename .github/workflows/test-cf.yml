@@ -27,7 +27,7 @@ jobs:
     with:
       # CREATE_CHANGESET: ${{ inputs.CREATE_CHANGESET }}
       # DEPLOY: ${{ inputs.DEPLOY }}
-      CREATE_CHANGESET: ${{ github.event.pull_request.state == "open" }}
+      CREATE_CHANGESET: ${{ github.event.pull_request.state == 'open' }}
       DEPLOY: ${{ github.event.pull_request.merged }}
       STACK_NAME: cloudfront-test
       TEMPLATE_FILE_NAME: test.yml

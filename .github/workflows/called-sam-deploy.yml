@@ -100,7 +100,7 @@ jobs:
       - name: sam build
         run: sam build --use-container
 
-      - name: sam deploy
+      - name: create changeset
         if: inputs.CREATE_CHANGESET
         run: |-
           sam deploy \
@@ -112,8 +112,8 @@ jobs:
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
-              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' \
-              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' \
+              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
               ${{ inputs.ADDITIONAL_PARAMETERS }}
 
@@ -129,7 +129,7 @@ jobs:
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
-              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' \
-              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' \
+              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
               ${{ inputs.ADDITIONAL_PARAMETERS }}

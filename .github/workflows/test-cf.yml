@@ -13,6 +13,6 @@ jobs:
     uses: ./.github/workflows/called-cfn-deploy.yml
     with:
       STACK_NAME: cloudfront-test
-      TEMPLATE_FILE_NAME: template.yml
+      TEMPLATE_FILE_NAME: test.yml
       WORKING_DIRECTORY: iac/test_cfn
     secrets: inherit

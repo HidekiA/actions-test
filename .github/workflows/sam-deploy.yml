@@ -72,7 +72,7 @@ jobs:
           aws sts get-caller-identity
 
       - name: sam build
-        run: sam build
+        run: sam build --use-container
 
       - name: sam deploy
         env:

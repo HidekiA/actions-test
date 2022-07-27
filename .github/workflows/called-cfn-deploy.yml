@@ -1,0 +1,83 @@
+name: sam deploy
+
+on:
+  workflow_call:
+    inputs:
+      STACK_NAME:
+        required: true
+        type: string
+      TEMPLATE_FILE_NAME:
+        required: false
+        type: string
+        default: template.yml
+      WORKING_DIRECTORY:
+        required: true
+        type: string
+      AWS_REGION:
+        required: false
+        type: string
+        default: ap-northeast-1
+      SAM_CAPABILITIES:
+        required: false
+        type: string
+        default: CAPABILITY_IAM
+    secrets:
+      ACTION_ROLE:
+        required: true
+      DEPLOY_ROLE:
+        required: true
+      TEMPLATE_BUCKET:
+        required: true
+      AWS_ACCOUNT_ID:
+        required: true
+
+
+env:
+  STACK_NAME_PREFIX: cicd-cfn-
+
+
+permissions:
+  id-token: write
+  contents: read
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ github.ref_name }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.WORKING_DIRECTORY }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ inputs.AWS_REGION }}
+
+      - name: cli version & id
+        run: |-
+          aws --version
+          aws sts get-caller-identity
+
+      - name: create changeset
+        id: changeset
+        run: |-
+          aws --profile sandbox cloudformation deploy \
+            --no-execute-changeset \
+            --no-fail-on-empty-changeset \
+            --template-file ${{ inputs.TEMPLATE_FILE_NAME }} \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ github.ref_name }}" \
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
+            --capabilities ${{ inputs.SAM_CAPABILITIES }} \
+            --parameter-overrides StageName=${{ github.ref_name }}
+
+      - name: show changeset
+        env:
+          RESULT: ${{ steps.changeset.outputs.result }}
+        run: >-
+          echo $RESULT

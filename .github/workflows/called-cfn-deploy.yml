@@ -53,7 +53,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
-      name: ${{ github.event.pull_request.base.ref }}
+      name: ${{ github.event.pull_request.base.ref || github.ref_name }}
+    env:
+      STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
     defaults:
       run:
         working-directory: ${{ inputs.WORKING_DIRECTORY }}
@@ -70,7 +72,7 @@ jobs:
           aws sts get-caller-identity
 
       - name: create changeset
-        if: inputs.CREATE_CHANGESET == true
+        if: inputs.CREATE_CHANGESET
         run: |-
           echo "CHANGESET<<EOF" >> $GITHUB_ENV
           aws cloudformation deploy \
@@ -79,29 +81,29 @@ jobs:
             --template-file ${{ inputs.TEMPLATE_FILE_NAME }} \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ github.ref_name }}" \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ env.STAGE_NAME }}" \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
-            --parameter-overrides StageName=${{ github.ref_name }} \
+            --parameter-overrides StageName=${{ env.STAGE_NAME }} \
             | tee -a $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: show changeset
-        if: inputs.CREATE_CHANGESET == true
+        if: inputs.CREATE_CHANGESET
         run: |-
           aws cloudformation describe-change-set \
             --change-set-name `echo "${{ env.CHANGESET }}" | sed -z 's@.*arn:aws:@arn:aws:@g'` \
             | jq ".Changes"
 
       - name: deploy
-        if: inputs.DEPLOY == true
+        if: inputs.DEPLOY
         run: |-
           aws cloudformation deploy \
             --no-fail-on-empty-changeset \
             --template-file ${{ inputs.TEMPLATE_FILE_NAME }} \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ github.ref_name }}" \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ env.STAGE_NAME }}" \
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
-            --parameter-overrides StageName=${{ github.ref_name }}
+            --parameter-overrides StageName=${{ env.STAGE_NAME }}

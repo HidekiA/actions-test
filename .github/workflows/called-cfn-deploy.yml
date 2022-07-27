@@ -76,9 +76,9 @@ jobs:
             --parameter-overrides StageName=${{ github.ref_name }} \
             >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-          echo ${{ env.CHANGESET }}
+          echo "${{ env.CHANGESET }}"
 
       - name: show changeset
         run: |-
           aws cloudformation describe-change-set \
-            --change-set-name `echo ${{ env.CHANGESET }} | sed -z 's@.*arn:aws:@arn:aws:@g'`
+            --change-set-name `echo "${{ env.CHANGESET }}" | sed -z 's@.*arn:aws:@arn:aws:@g'`

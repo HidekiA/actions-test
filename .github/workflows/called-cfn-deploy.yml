@@ -62,7 +62,6 @@ jobs:
           aws sts get-caller-identity
 
       - name: create changeset
-        id: changeset
         run: |-
           echo "CHANGESET<<EOF" >> $GITHUB_ENV
           aws cloudformation deploy \
@@ -77,10 +76,9 @@ jobs:
             --parameter-overrides StageName=${{ github.ref_name }} \
             >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+          echo ${{ env.CHANGESET }}
 
       - name: show changeset
-        env:
-          RESULT: ${{ steps.changeset.outputs.result }}
         run: |-
-          echo ${{ env.CHANGESET }}
-          echo ${{ steps.changeset.outputs.result }}
+          aws cloudformation describe-change-set \
+            --change-set-name `echo ${{ env.CHANGESET }} | sed -z 's@.*arn:aws:@arn:aws:@g'`

@@ -2,17 +2,34 @@ name: test-cf
 
 on:
   workflow_dispatch:
+    inputs:
+      CREATE_CHANGESET:
+        required: false
+        type: boolean
+        default: false
+        description: aaa
+      DEPLOY:
+        required: false
+        type: boolean
+        default: false
+        description: aaa
   pull_request:
     types: [closed]
     branches: [dev, stg, prd]
     paths:
       - iac/test-cfn/**
 
+env:
+  TEMPLATE_FILE: test.yaml
+
 jobs:
   cf-test:
     uses: ./.github/workflows/called-cfn-deploy.yml
     with:
+      CREATE_CHANGESET: ${{ inputs.CREATE_CHANGESET }}
+      DEPLOY: ${{ inputs.DEPLOY }}
       STACK_NAME: cloudfront-test
-      TEMPLATE_FILE_NAME: test.yml
+      TEMPLATE_FILE_NAME: ${{ env.TEMPLATE_FILE }}
+      # TEMPLATE_FILE_NAME: test.yml
       WORKING_DIRECTORY: iac/test_cfn
     secrets: inherit

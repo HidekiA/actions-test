@@ -3,6 +3,14 @@ name: sam deploy
 on:
   workflow_call:
     inputs:
+      CREATE_CHANGESET:
+        required: false
+        type: boolean
+        default: false
+      DEPLOY:
+        required: false
+        type: boolean
+        default: false
       STACK_NAME:
         required: true
         type: string
@@ -62,6 +70,7 @@ jobs:
           aws sts get-caller-identity
 
       - name: create changeset
+        if: inputs.CREATE_CHANGESET == true
         run: |-
           echo "CHANGESET<<EOF" >> $GITHUB_ENV
           aws cloudformation deploy \
@@ -78,7 +87,21 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: show changeset
+        if: inputs.CREATE_CHANGESET == true
         run: |-
           aws cloudformation describe-change-set \
             --change-set-name `echo "${{ env.CHANGESET }}" | sed -z 's@.*arn:aws:@arn:aws:@g'` \
             | jq ".Changes"
+
+      - name: create changeset
+        if: inputs.DEPLOY == true
+        run: |-
+          aws cloudformation deploy \
+            --no-fail-on-empty-changeset \
+            --template-file ${{ inputs.TEMPLATE_FILE_NAME }} \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}-${{ github.ref_name }}" \
+            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
+            --capabilities ${{ inputs.SAM_CAPABILITIES }} \
+            --parameter-overrides StageName=${{ github.ref_name }}

@@ -65,7 +65,7 @@ jobs:
       - name: create changeset
         id: changeset
         run: |-
-          aws --profile sandbox cloudformation deploy \
+          aws cloudformation deploy \
             --no-execute-changeset \
             --no-fail-on-empty-changeset \
             --template-file ${{ inputs.TEMPLATE_FILE_NAME }} \

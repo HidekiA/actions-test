@@ -11,7 +11,7 @@ jobs:
     steps:
       - run: echo ${{ github.event_name }}
       - run: echo ${{ github.ref_name }}
-      - run: echo ${{ github.event.pull_request.base.ref_name }}
+      - run: echo ${{ github.event.pull_request.base.ref }}
 
   if_merged:
     if: github.event.pull_request.merged == true

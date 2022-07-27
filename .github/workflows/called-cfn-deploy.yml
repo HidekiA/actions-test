@@ -93,7 +93,7 @@ jobs:
             --change-set-name `echo "${{ env.CHANGESET }}" | sed -z 's@.*arn:aws:@arn:aws:@g'` \
             | jq ".Changes"
 
-      - name: create changeset
+      - name: deploy
         if: inputs.DEPLOY == true
         run: |-
           aws cloudformation deploy \

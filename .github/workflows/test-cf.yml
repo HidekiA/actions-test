@@ -14,7 +14,7 @@ on:
         default: false
         description: deploy
   pull_request:
-    types: [closed]
+    types: [opened, reopened, synchronize, closed]
     branches: [dev, stg, prd]
     paths:
       - iac/test-cfn/**
@@ -26,8 +26,10 @@ jobs:
   cf-test:
     uses: ./.github/workflows/called-cfn-deploy.yml
     with:
-      CREATE_CHANGESET: ${{ inputs.CREATE_CHANGESET }}
-      DEPLOY: ${{ inputs.DEPLOY }}
+      # CREATE_CHANGESET: ${{ inputs.CREATE_CHANGESET }}
+      # DEPLOY: ${{ inputs.DEPLOY }}
+      CREATE_CHANGESET: ${{ github.event.pull_request.merged != true }}
+      DEPLOY: ${{ github.event.pull_request.merged }}
       STACK_NAME: cloudfront-test
       TEMPLATE_FILE_NAME: test.yml
       WORKING_DIRECTORY: iac/test_cfn

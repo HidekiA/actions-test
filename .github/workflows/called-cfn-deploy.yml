@@ -36,10 +36,10 @@ env:
   STACK_NAME_PREFIX: cicd-cfn-
 
 
-permissions:
-  id-token: write
-  contents: read
-
+# permissions:
+#   id-token: write
+#   contents: read
+permissions: read-all|write-all
 
 jobs:
   deploy:
@@ -82,5 +82,5 @@ jobs:
         env:
           RESULT: ${{ steps.changeset.outputs.result }}
         run: |-
-          echo $CS
+          echo ${{ env.CS }}
           echo ${{ steps.changeset.outputs.result }}

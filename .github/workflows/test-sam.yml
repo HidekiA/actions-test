@@ -1,0 +1,34 @@
+name: test-sam
+
+on:
+  workflow_dispatch:
+    inputs:
+      CREATE_CHANGESET:
+        required: false
+        type: boolean
+        default: false
+        description: dry-run
+      DEPLOY:
+        required: false
+        type: boolean
+        default: false
+        description: deploy
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    paths:
+      - api/items/**
+
+jobs:
+  CICD:
+    with:
+      API_NAME: items
+      COGNITO_USER_POOL: user
+      ADDITIONAL_PARAMETERS: "AP=${{ secrets.TEMPLATE_BUCKET }}"
+      
+      CREATE_CHANGESET:
+        ${{ github.event.pull_request.state == 'open' || inputs.CREATE_CHANGESET }}
+      DEPLOY:
+        ${{ github.event.pull_request.merged || inputs.DEPLOY }}
+    secrets: inherit
+    uses: ./.github/workflows/called-sam-deploy.yml
+

@@ -4,7 +4,7 @@ Description: S3 Bucket and Access Policy.
 Parameters:
   Param:
     Type: String
-    Default: param5
+    Default: param6
   StageName:
     Type: String
     Default: dev

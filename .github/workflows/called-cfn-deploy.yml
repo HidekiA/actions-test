@@ -74,7 +74,7 @@ jobs:
             --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides StageName=${{ github.ref_name }} \
-            >> tee -a $GITHUB_ENV
+            | tee -a $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: show changeset

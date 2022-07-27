@@ -36,10 +36,9 @@ env:
   STACK_NAME_PREFIX: cicd-cfn-
 
 
-# permissions:
-#   id-token: write
-#   contents: read
-permissions: read-all|write-all
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:

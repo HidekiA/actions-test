@@ -12,6 +12,10 @@ jobs:
       - run: echo ${{ github.event_name }}
       - run: echo ${{ github.ref_name }}
       - run: echo ${{ github.event.pull_request.base.ref }}
+      - run: echo ${{ github.event.pull_request.base.ref || github.event_name }}
+      - run: echo ${{ github.event_name == 'push' && 'event_name is push' }}
+      - run: echo ${{ (github.event_name == 'push' && 'event_name is push') || (github.event_name == 'workflow_dispatch' && 'event_name is workflow_dispatch') }}
+      - run: echo ${{ (github.event_name == 'push' && 'event_name is push') || (github.event_name == 'pull_request' && 'event_name is pull_request') }}
 
   if_merged:
     if: github.event.pull_request.merged == true

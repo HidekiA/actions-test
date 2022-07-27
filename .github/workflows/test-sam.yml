@@ -23,7 +23,6 @@ jobs:
     with:
       API_NAME: items
       COGNITO_USER_POOL: user
-      ADDITIONAL_PARAMETERS: "AP=${{ secrets.TEMPLATE_BUCKET }}"
       
       CREATE_CHANGESET:
         ${{ github.event.pull_request.state == 'open' || inputs.CREATE_CHANGESET }}

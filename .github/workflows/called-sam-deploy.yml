@@ -133,8 +133,7 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           script: |
-            const result = `cat result.txt`;
-            const output = `\`${{ env.CHANGESET_RESULT }}\`
+            const output = `${{ env.CHANGESET_RESULT }}
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,

@@ -57,10 +57,10 @@ env:
   PARAMETER_FILE: parameters.txt
 
 
-permissions:
-  id-token: write
-  contents: read
-  issues: write
+permissions: read-all|write-all
+  # id-token: write
+  # contents: read
+  # issues: write
 
 
 jobs:
@@ -127,6 +127,9 @@ jobs:
           cat result.txt
           echo "CHANGESET_RESULT<<EOF" >> $GITHUB_ENV
           cat result.txt | sed -z 's@.*CloudFormation stack changeset@@g' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "CHANGESET_ARN<<EOF" >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request

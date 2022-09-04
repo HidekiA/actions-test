@@ -57,9 +57,10 @@ env:
   PARAMETER_FILE: parameters.txt
 
 
-permissions:
-  id-token: write
+permissions: 
   contents: read
+  id-token: write
+  pull-requests: write
 
 
 jobs:
@@ -100,12 +101,15 @@ jobs:
       - name: sam build
         run: sam build --use-container
 
+      # Create & show changeset
       - name: create changeset
+        id: create_changeset
         if: inputs.CREATE_CHANGESET
         run: |-
           sam deploy \
             --no-execute-changeset \
-            --no-fail-on-empty-changeset --no-disable-rollback \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \
@@ -115,14 +119,46 @@ jobs:
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
-              ${{ inputs.ADDITIONAL_PARAMETERS }}
+              ${{ inputs.ADDITIONAL_PARAMETERS }} \
+            > result.txt 2>&1
+      
+      - name: show create-changeset result
+        if: inputs.CREATE_CHANGESET && always()
+        run: |-
+          cat result.txt
 
+      - name: store create-changeset result
+        if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
+        run: |-
+          echo "CHANGESET_TABLE<<EOF" >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created.*@\1@g' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Comment on Pull Request
+        uses: actions/github-script@v6
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_TABLE
+        with:
+          script: |
+            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }} changeset
+            \`\`\`
+            ${{ env.CHANGESET_TABLE }}
+            \`\`\`
+            *Pusher: @${{ github.actor }}*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      # Deploy
       - name: sam deploy
         if: inputs.DEPLOY
         run: |-
           sam deploy \
             --no-confirm-changeset --force-upload \
-            --no-fail-on-empty-changeset --no-disable-rollback \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \

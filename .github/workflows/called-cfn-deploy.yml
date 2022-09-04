@@ -95,6 +95,38 @@ jobs:
             --change-set-name `echo "${{ env.CHANGESET }}" | sed -z 's@.*arn:aws:@arn:aws:@g'` \
             | jq ".Changes"
 
+      # - name: store create-changeset result
+      #   if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
+      #   run: |-
+      #     cat result.txt | sed -z 's@.*\(arn:aws:cloudformation:[^ \n$]*\)@CHANGESET_ARN=\1@g' >> $GITHUB_ENV
+
+      # - name: describe changeset
+      #   if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_ARN
+      #   run: |-
+      #     echo "CHANGESET_DESCRIPTION<<EOF" >> $GITHUB_ENV
+      #     aws cloudformation describe-change-set \
+      #       --change-set-name ${{ env.CHANGESET_ARN }} \
+      #       | jq '.Changes[].ResourceChange | {Operation: .Action, LogicalId: .LogicalResourceId, Type: .ResourceType, Replacement: .Replacement}' \
+      #       >> $GITHUB_ENV
+      #     echo "EOF" >> $GITHUB_ENV
+
+      # - name: Comment on Pull Request
+      #   uses: actions/github-script@v6
+      #   if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_DESCRIPTION
+      #   with:
+      #     script: |
+      #       const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }} changeset
+      #       \`\`\`
+      #       ${{ env.CHANGESET_DESCRIPTION }}
+      #       \`\`\`
+      #       *Pusher: @${{ github.actor }}*`;
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: output
+      #       })
+
       - name: deploy
         if: inputs.DEPLOY
         run: |-

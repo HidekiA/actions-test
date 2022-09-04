@@ -120,7 +120,7 @@ jobs:
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
               ${{ inputs.ADDITIONAL_PARAMETERS }} \
-            > result.txt
+            > result.txt 2>&1
       
       - name: show create-changeset result
         if: inputs.CREATE_CHANGESET && always()

@@ -126,7 +126,7 @@ jobs:
         run: |-
           cat result.txt
           echo "CHANGESET_RESULT<<EOF" >> $GITHUB_ENV
-          cat result.txt | sed -z 's@.*CloudFormation stack changeset@@g' >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created successfully.@\1@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
           echo "CHANGESET_ARN<<EOF" >> $GITHUB_ENV
           cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g' >> $GITHUB_ENV
@@ -155,7 +155,8 @@ jobs:
           echo "CHANGESET_OUTPUT<<EOF" >> $GITHUB_ENV
           aws cloudformation describe-change-set \
             --change-set-name `cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g'` \
-            | jq ".Changes" >> $GITHUB_ENV
+            | jq '.Changes[].ResourceChange | {Operation: .Action, LogicalId: .LogicalResourceId, Type: .ResourceType, Replacement: .Replacement}' \
+            >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request

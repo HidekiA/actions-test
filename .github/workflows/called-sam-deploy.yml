@@ -100,6 +100,7 @@ jobs:
       - name: sam build
         run: sam build --use-container
 
+      # Create & show changeset
       - name: create changeset
         if: inputs.CREATE_CHANGESET
         run: |-
@@ -115,8 +116,34 @@ jobs:
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
-              ${{ inputs.ADDITIONAL_PARAMETERS }}
+              ${{ inputs.ADDITIONAL_PARAMETERS }} \
+            > result.txt
+      
+      - name: show create-changeset result
+        if: inputs.CREATE_CHANGESET
+        continue-on-error: true
+        run: |-
+          cat result.txt
+          echo "CHANGESET_RESULT<<EOF" >> $GITHUB_ENV
+          cat result.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
+      - name: Comment on Pull Request
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const result = `cat result.txt`;
+            const output = `\`${{ env.CHANGESET_RESULT }}\`
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      # Deploy
       - name: sam deploy
         if: inputs.DEPLOY
         run: |-

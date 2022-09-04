@@ -7,14 +7,20 @@ on:
     branches: [dev, stg, prd]
     paths:
       - api/items/**
+  push:
+    branches: [sandbox]
+    paths:
+      - api/items/**
 
 jobs:
-  sam-deploy:
-    if: >-
-      (github.event_name != 'pull_request') ||
-      (github.event.pull_request.merged == true)
+  deploy:
+    # if: >-
+    #   (github.event_name != 'pull_request') ||
+    #   (github.event.pull_request.merged == true)
     uses: ./.github/workflows/sam-deploy.yml
     with:
       API_NAME: items
       COGNITO_USER_POOL: user
+      CREATE_CHANGESET: ${{ (github.event_name == 'pull_request') && (github.event.pull_request.merged == false) }}
+      DEPLOY: ${{ (github.event_name != 'pull_request') || (github.event.pull_request.merged == true) }}
     secrets: inherit

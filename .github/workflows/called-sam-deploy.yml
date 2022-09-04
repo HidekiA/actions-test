@@ -125,7 +125,7 @@ jobs:
         run: |-
           cat result.txt
           echo "CHANGESET_RESULT<<EOF" >> $GITHUB_ENV
-          cat result.txt >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*CloudFormation stack changeset@@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request

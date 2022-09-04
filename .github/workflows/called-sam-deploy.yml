@@ -104,10 +104,12 @@ jobs:
       # Create & show changeset
       - name: create changeset
         if: inputs.CREATE_CHANGESET
+        id: create_changeset
         run: |-
           sam deploy \
             --no-execute-changeset \
-            --no-fail-on-empty-changeset --no-disable-rollback \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \
@@ -125,23 +127,24 @@ jobs:
         continue-on-error: true
         run: |-
           cat result.txt
-          echo "CHANGESET_RESULT<<EOF" >> $GITHUB_ENV
-          cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created successfully.@\1@g' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          echo "CHANGESET_ARN<<EOF" >> $GITHUB_ENV
-          cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g' >> $GITHUB_ENV
+
+      - name: store create-changeset result
+        if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
+        run: |-
+          echo "CHANGESET_TABLE<<EOF" >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created.*@\1@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request
         uses: actions/github-script@v6
-        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request'
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_TABLE
         with:
           script: |
-            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
+            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }} changeset
             \`\`\`
-            ${{ env.CHANGESET_RESULT }}
+            ${{ env.CHANGESET_TABLE }}
             \`\`\`
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            *Pusher: @${{ github.actor }}*`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -149,26 +152,33 @@ jobs:
               body: output
             })
 
-      - name: show changeset (passed if empty changeset)
-        if: inputs.CREATE_CHANGESET
+      - name: store create-changeset result
+        if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
         run: |-
-          echo "CHANGESET_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "CHANGESET_ARN<<EOF" >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: describe changeset
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_ARN
+        run: |-
+          echo "CHANGESET_DESCRIPTION<<EOF" >> $GITHUB_ENV
           aws cloudformation describe-change-set \
-            --change-set-name `cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g'` \
+            --change-set-name ${{ env.CHANGESET_ARN }} \
             | jq '.Changes[].ResourceChange | {Operation: .Action, LogicalId: .LogicalResourceId, Type: .ResourceType, Replacement: .Replacement}' \
             >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request
         uses: actions/github-script@v6
-        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request'
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_DESCRIPTION
         with:
           script: |
-            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
+            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }} changeset
             \`\`\`
-            ${{ env.CHANGESET_OUTPUT }}
+            ${{ env.CHANGESET_DESCRIPTION }}
             \`\`\`
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            *Pusher: @${{ github.actor }}*`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -182,7 +192,8 @@ jobs:
         run: |-
           sam deploy \
             --no-confirm-changeset --force-upload \
-            --no-fail-on-empty-changeset --no-disable-rollback \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \

@@ -107,7 +107,7 @@ jobs:
         if: inputs.CREATE_CHANGESET
         run: |-
           sam deploy \
-            --no-execute- \
+            --no-execute-changeset \
             --no-fail-on-empty-changeset \
             --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \

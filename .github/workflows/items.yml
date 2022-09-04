@@ -2,17 +2,6 @@ name: api-items
 
 on:
   workflow_dispatch:
-    inputs:
-      CREATE_CHANGESET:
-        description: 'create changeset'
-        required: false
-        type: boolean
-        default: false
-      DEPLOY:
-        description: 'deploy'
-        required: false
-        type: boolean
-        default: false
   pull_request:
     types: [opened, reopened, synchronize, closed]
     branches: [dev, stg, prd]
@@ -30,7 +19,7 @@ jobs:
       API_NAME: items
       COGNITO_USER_POOL: user
       CREATE_CHANGESET:
-        ${{ github.event.pull_request.state == 'open' || inputs.CREATE_CHANGESET }}
+        ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
       DEPLOY:
-        ${{ github.event.pull_request.merged || inputs.DEPLOY }}
+        ${{ github.event_name != 'pull_request' || github.event.pull_request.merged }}
     secrets: inherit

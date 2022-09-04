@@ -71,7 +71,8 @@ jobs:
     environment:
       name: ${{ github.event.pull_request.base.ref || github.ref_name }}
     env:
-      STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
+      # STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
+      STAGE_NAME: sandbox
       COGNITO_ARN: >-
         ${{ 
           (inputs.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || 

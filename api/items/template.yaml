@@ -44,16 +44,17 @@ Parameters:
 # API version
   ServiceName:
     Type: String
-    Default: DroneEC
+    Default: sorakarabin
   Version:
     Description: "API version [v1 | v2 | v3 | ...]"
     Type: String
     AllowedPattern: "v[0-9]+"
     Default: v1
   StageName:
-    Description: "API stage [tmp | dev | stg | prd]"
+    Description: "API stage [sandbox | tmp | dev | stg | prd]"
     Type: String
     AllowedValues:
+      - sandbox
       - tmp
       - dev
       - stg
@@ -125,42 +126,51 @@ Parameters:
 Mappings:
   Function:
     DeploymentPreference:
+      sandbox: AllAtOnce
       tmp: AllAtOnce
       dev: AllAtOnce
       stg: AllAtOnce
       prd: Canary10Percent10Minutes
     Timeout:
+      sandbox: 10
       tmp: 10
       dev: 10
       stg: 10
       prd: 10
     PowerToolsLoggerLogEvent:
+      sandbox: "True"
       tmp: "True"
       dev: "True"
       stg: "False"
       prd: "False"
     LogLevel:
+      sandbox: DEBUG
       tmp: DEBUG
       dev: DEBUG
       stg: INFO
       prd: INFO
   LogGroup:
     RetentionInDays:
+      sandbox: 30
       tmp: 30
       dev: 30
       stg: 30
       prd: 365
   API:
     ApiMappingDomainName:
+      sandbox: "api.sorakarabin-sandbox.panasonic-esl.com"
       tmp: ""
       dev: "api.sorakarabin.panasonic-esl.com"
       stg: "api.sorakarabin-stg.com"
       prd: "api.sorakarabin.com"
     AllowOrigin:
+      sandbox: "*"
       tmp: "*"
       dev: "*"
-      stg: "https://www.sorakarabin-stg.com"
-      prd: "https://www.sorakarabin.com"
+      stg: "*"
+      prd: "*"
+      # stg: "https://www.sorakarabin-stg.com"
+      # prd: "https://www.sorakarabin.com"
 
 
 Conditions:

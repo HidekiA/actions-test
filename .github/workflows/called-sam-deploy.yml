@@ -155,7 +155,7 @@ jobs:
           echo "CHANGESET_OUTPUT<<EOF" >> $GITHUB_ENV
           aws cloudformation describe-change-set \
             --change-set-name `cat result.txt | sed -z 's@.*Changeset created successfully. arn:aws:@arn:aws:@g'` \
-            | jq ".Changes"
+            | jq ".Changes" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on Pull Request

@@ -57,10 +57,11 @@ env:
   PARAMETER_FILE: parameters.txt
 
 
-permissions: read-all|write-all
-  # id-token: write
-  # contents: read
-  # issues: write
+permissions: 
+  contents: read
+  id-token: write
+  issues: write
+  pull-requests: write
 
 
 jobs:

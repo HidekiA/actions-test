@@ -156,7 +156,7 @@ jobs:
         if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
         run: |-
           echo "CHANGESET_ARN<<EOF" >> $GITHUB_ENV
-          cat result.txt | sed -z 's@.*\(arn:aws:cloudformation:.*\)@\1@g' >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*\(arn:aws:cloudformation:[^ \n$]*\)@\1@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: describe changeset

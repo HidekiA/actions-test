@@ -105,7 +105,7 @@ jobs:
         run: |-
           sam deploy \
             --no-execute-changeset \
-            --no-fail-on-empty-changeset \
+            --no-fail-on-empty-changeset --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \
@@ -122,7 +122,7 @@ jobs:
         run: |-
           sam deploy \
             --no-confirm-changeset --force-upload \
-            --no-fail-on-empty-changeset \
+            --no-fail-on-empty-changeset --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \

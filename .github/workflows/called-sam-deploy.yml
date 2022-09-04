@@ -103,8 +103,9 @@ jobs:
 
       # Create & show changeset
       - name: create changeset
-        if: inputs.CREATE_CHANGESET
         id: create_changeset
+        if: inputs.CREATE_CHANGESET
+        continue-on-error: true
         run: |-
           sam deploy \
             --no-execute- \
@@ -124,7 +125,6 @@ jobs:
       
       - name: show create-changeset result
         if: inputs.CREATE_CHANGESET
-        continue-on-error: true
         run: |-
           cat result.txt
 

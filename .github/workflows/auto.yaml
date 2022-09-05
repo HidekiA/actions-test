@@ -35,26 +35,20 @@ jobs:
               body: output
             })
 
-      - name: console.log
+      - name: multiline
         uses: actions/github-script@v6
         with:
           script: |
-            const x = 'abc def';
+            const x = 'abc def' + 'zzz';
             console.log(x);
 
-      - name: console.log
+      - name: multiline
         uses: actions/github-script@v6
         with:
           script: |
-            const x = 'abc def';
-            if (x.match(/bc/))
-              console.log('bc');
-            else
-              console.log('not bc');
-            if (x.match(/cd/))
-              console.log('cd');
-            else
-              console.log('not cd');
+            const x = 'abc def'
+             + 'zzz';
+            console.log(x);
 
   if_merged:
     if: github.event.pull_request.merged == true

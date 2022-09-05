@@ -3,15 +3,17 @@ name: Called SAM
 on:
   workflow_call:
     inputs:
+      # dry-run / execute
       CREATE_CHANGESET:
-        required: false
+        required: true
         type: boolean
         default: false
       DEPLOY:
-        required: false
+        required: true
         type: boolean
         default: false
 
+      # API settings
       API_NAME:
         required: true
         type: string
@@ -19,11 +21,20 @@ on:
         required: true
         type: string
         description: user | shop
+
+      # optional
       ADDITIONAL_PARAMETERS:
         required: false
         type: string
         default: ''
-        
+      PARAMETER_FILE:
+        required: false
+        type: string
+        default: 'parameters.txt'
+      STACK_NAME_PREFIX:
+        required: false
+        type: string
+        default: 'cicd-api-'
       AWS_REGION:
         required: false
         type: string
@@ -52,11 +63,6 @@ on:
         required: true
 
 
-env:
-  STACK_NAME_PREFIX: cicd-api-
-  PARAMETER_FILE: parameters.txt
-
-
 permissions: 
   contents: read
   id-token: write
@@ -71,7 +77,7 @@ jobs:
     environment:
       name: ${{ github.event.pull_request.base.ref || github.ref_name }}
     env:
-      STACK_NAME: ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
+      STACK_NAME: ${{ inputs.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
       # STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
       STAGE_NAME: sandbox
       COGNITO_ARN: >-
@@ -117,7 +123,7 @@ jobs:
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
             --stack-name ${{ env.STACK_NAME }} \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
-            --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
@@ -171,7 +177,7 @@ jobs:
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
             --stack-name ${{ env.STACK_NAME }} \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
-            --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
               sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \

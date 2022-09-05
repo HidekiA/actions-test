@@ -142,26 +142,22 @@ jobs:
           cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created.*@\1@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: if changeset is empty
-        if: inputs.CREATE_CHANGESET && env.CHANGESET_REPORT == '*No changes to deploy*'
-        run: |-
-          echo 'CHANGESET_REPORT="No changes"' >> $GITHUB_ENV
-
       - name: Comment on Pull Request
         uses: actions/github-script@v6
         if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_REPORT
         with:
           script: |
-            const output = `## ${{ env.STACK_NAME }} changeset
-            \`\`\`
-            ${{ env.CHANGESET_REPORT }}
-            \`\`\`
-            *Pusher: @${{ github.actor }}*`;
+            const report = '${{ env.CHANGESET_REPORT }}';
+            const body = '## ${{ env.STACK_NAME }} changeset\n'
+              + report.match(/No changes to deploy/)
+              ? ('No changes.\n')
+              : ('\n```\n' + report + '\n```\n')
+              + '*Pusher: @${{ github.actor }}*';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: output
+              body
             })
 
       # Deploy

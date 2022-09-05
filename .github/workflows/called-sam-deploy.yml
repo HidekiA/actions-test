@@ -71,6 +71,7 @@ jobs:
     environment:
       name: ${{ github.event.pull_request.base.ref || github.ref_name }}
     env:
+      STACK_NAME: ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
       # STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
       STAGE_NAME: sandbox
       COGNITO_ARN: >-
@@ -113,8 +114,8 @@ jobs:
             --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
+            --stack-name ${{ env.STACK_NAME }} \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
@@ -131,18 +132,23 @@ jobs:
       - name: store create-changeset result
         if: inputs.CREATE_CHANGESET && steps.create_changeset.outcome == 'success'
         run: |-
-          echo "CHANGESET_TABLE<<EOF" >> $GITHUB_ENV
+          echo "CHANGESET_REPORT<<EOF" >> $GITHUB_ENV
           cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created.*@\1@g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: if changeset is empty
+        if: inputs.CREATE_CHANGESET && env.CHANGESET_REPORT == '*No changes to deploy*'
+        run: |-
+          echo 'CHANGESET_REPORT="No changes"' >> $GITHUB_ENV
+
       - name: Comment on Pull Request
         uses: actions/github-script@v6
-        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_TABLE
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_REPORT
         with:
           script: |
-            const output = `## ${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }} changeset
+            const output = `## ${{ env.STACK_NAME }} changeset
             \`\`\`
-            ${{ env.CHANGESET_TABLE }}
+            ${{ env.CHANGESET_REPORT }}
             \`\`\`
             *Pusher: @${{ github.actor }}*`;
             github.rest.issues.createComment({
@@ -162,8 +168,8 @@ jobs:
             --no-disable-rollback \
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
-            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}-${{ env.STAGE_NAME}}" \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}" \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
+            --stack-name ${{ env.STACK_NAME }} \
             --capabilities ${{ inputs.SAM_CAPABILITIES }} \
             --parameter-overrides `cat ${{ env.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \

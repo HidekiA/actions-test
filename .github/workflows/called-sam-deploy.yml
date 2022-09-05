@@ -155,10 +155,8 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body
+              body: body
             });
-            const a = report.match(/No changes to deploy/);
-            console.log(a);
 
       # Deploy
       - name: sam deploy

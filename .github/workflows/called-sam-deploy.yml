@@ -149,7 +149,6 @@ jobs:
           script: |
             const report = '${{ env.CHANGESET_REPORT }}';
             const body = '## ${{ env.STACK_NAME }} changeset\n'
-              + ('```\n' + report + '\n```\n')
               + '*Pusher: @${{ github.actor }}*';
             github.rest.issues.createComment({
               issue_number: context.issue.number,

@@ -149,18 +149,16 @@ jobs:
           script: |
             const report = '${{ env.CHANGESET_REPORT }}';
             const body = '## ${{ env.STACK_NAME }} changeset\n'
-              + (
-                report.match(/No changes to deploy/)
-                ? ('No changes.\n')
-                : ('```\n' + report + '\n```\n')
-              )
+              + ('```\n' + report + '\n```\n')
               + '*Pusher: @${{ github.actor }}*';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body
-            })
+            });
+            const a = report.match(/No changes to deploy/);
+            console.log(a);
 
       # Deploy
       - name: sam deploy

@@ -35,6 +35,27 @@ jobs:
               body: output
             })
 
+      - name: console.log
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const x = 'abc def';
+            console.log(x);
+
+      - name: console.log
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const x = 'abc def';
+            if (x.match(/bc/))
+              console.log('bc');
+            else
+              console.log('not bc');
+            if (x.match(/cd/))
+              console.log('cd');
+            else
+              console.log('not cd');
+
   if_merged:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest

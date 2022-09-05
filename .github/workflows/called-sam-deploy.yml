@@ -147,8 +147,7 @@ jobs:
         if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request' && env.CHANGESET_REPORT
         with:
           script: |
-            const report = '${{ env.CHANGESET_REPORT }}';
-            const body = '## ${{ env.STACK_NAME }} changeset\n';
+            const body = '## ${{ env.STACK_NAME }} changeset';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

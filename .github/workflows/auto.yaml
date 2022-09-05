@@ -35,20 +35,20 @@ jobs:
               body: output
             })
 
-      - name: multiline
+      - name: new line
         uses: actions/github-script@v6
         with:
           script: |
-            const x = 'abc def' + 'zzz';
+            const x = 'abc def\n' + 'zzz';
             console.log(x);
 
-      - name: multiline
+      - name: dict
         uses: actions/github-script@v6
         with:
           script: |
-            const x = 'abc def'
-             + 'zzz';
-            console.log(x);
+            const x = 'abc def';
+            const y = {x, z: 'zzz'};
+            console.log(y);
 
   if_merged:
     if: github.event.pull_request.merged == true

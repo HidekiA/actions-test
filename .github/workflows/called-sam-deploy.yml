@@ -148,7 +148,7 @@ jobs:
         with:
           script: |
             const report = `${{ env.CHANGESET_REPORT }}`;
-            const body = '## ${{ env.STACK_NAME }} changeset' +
+            const body = '## ${{ env.STACK_NAME }} changeset\n' +
               (report.match(/No changes to deploy./) ? 'No changes to deploy.\n' : ('```\n' + report + '\n```\n')) + 
               '*Pusher: @${{ github.actor }}*';
             github.rest.issues.createComment({

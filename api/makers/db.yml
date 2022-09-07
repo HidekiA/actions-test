@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Rest API with DynamoDB"
+
+Parameters:
+  TableName:
+    Type: String
+    Default: ""
+  PartitionKeyName:
+    Type: String
+    Default: ""
+  PartitionKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  SortKeyName:
+    Description: "Keep blank to disable sort key"
+    Type: String
+    Default: ""
+  SortKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  StreamViewType:
+    Description: "Blank or [KEYS_ONLY | NEW_AND_OLD_IMAGES | NEW_IMAGE | OLD_IMAGE]"
+    Type: String
+    AllowedValues:
+      - ""
+      - KEYS_ONLY
+      - NEW_AND_OLD_IMAGES
+      - NEW_IMAGE
+      - OLD_IMAGE
+    Default: ""
+
+
+Conditions:
+  UseTableSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
+  UseTableStream: !Not [!Equals [!Ref StreamViewType, ""]]
+
+
+# DynamoDB
+  MyTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: !Ref PartitionKeyName
+          AttributeType: !Ref PartitionKeyType
+        - !If
+          - UseTableSortKey
+          - AttributeName: !Ref SortKeyName
+            AttributeType: !Ref SortKeyType
+          - !Ref AWS::NoValue
+      KeySchema:
+        - AttributeName: !Ref PartitionKeyName
+          KeyType: HASH # Partition key
+        - !If
+          - UseTableSortKey
+          - AttributeName: !Ref SortKeyName
+            KeyType: RANGE # Sort key
+          - !Ref AWS::NoValue
+      TableClass: STANDARD
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      ContributorInsightsSpecification:
+        Enabled: false
+      StreamSpecification:
+        !If
+          - UseTableStream
+          - StreamViewType: !Ref StreamViewType
+          - !Ref AWS::NoValue

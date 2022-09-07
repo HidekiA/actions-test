@@ -1,0 +1,15 @@
+ServiceName=sorakarabin
+Version=v1
+StageName=dev
+ResourceName=makers
+UseGetMethod=Y
+UsePostMethod=N
+UsePutMethod=N
+UseDeleteMethod=N
+LambdaRuntime=python3.9
+PartitionKeyName=makerId
+PartitionKeyType=S
+SortKeyName=""
+SortKeyType=S
+StreamViewType=""
+CognitoArn=""

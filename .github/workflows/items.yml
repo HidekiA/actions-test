@@ -14,20 +14,7 @@ on:
 
 
 jobs:
-  db:
-    uses: ./.github/workflows/called-cfn.yml
-    with:
-      STACK_NAME: items
-      WORKING_DIRECTORY: api/items
-      TEMPLATE_FILE: db.yml
-      CREATE_CHANGESET:
-        ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
-      DEPLOY:
-        ${{ github.event_name != 'pull_request' || github.event.pull_request.merged }}
-    secrets: inherit
-
   api:
-    needs: db
     uses: ./.github/workflows/called-sam.yml
     with:
       API_NAME: items

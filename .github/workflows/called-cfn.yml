@@ -106,7 +106,12 @@ jobs:
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME }}" \
             --stack-name "${{ env.STACK_NAME }}" \
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
-            --parameter-overrides StageName=${{ env.STAGE_NAME }} \
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
+              sed -E 's@^#.*$@@g' | \
+              sed -E 's@^(StageName=).*$@@g' | \
+              sed -E 's@^(BASE_URL=).*$@@g'` \
+              StageName="${{ env.STAGE_NAME }}" \
+              BASE_URL="${{ secrets.URL }}" \
             > result.txt 2>&1
 
       - name: show create-changeset result
@@ -159,4 +164,9 @@ jobs:
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME }}" \
             --stack-name "${{ env.STACK_NAME }}" \
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
-            --parameter-overrides StageName=${{ env.STAGE_NAME }}
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
+              sed -E 's@^#.*$@@g' | \
+              sed -E 's@^(StageName=).*$@@g' | \
+              sed -E 's@^(BASE_URL=).*$@@g'` \
+              StageName="${{ env.STAGE_NAME }}" \
+              BASE_URL="${{ secrets.URL }}"

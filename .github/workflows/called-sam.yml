@@ -60,6 +60,8 @@ on:
         required: true
       AWS_ACCOUNT_ID:
         required: true
+      URL:
+        required: true
 
 
 permissions: 
@@ -119,10 +121,17 @@ jobs:
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
             --template-file ${{ inputs.TEMPLATE_FILE }} \
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
-              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
-              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
-              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g' | \
-              sed -E 's@^(CognitoArnShop=).*$@\1"${{ secrets.COGNITO_ARN_SHOP }}"@g'` \
+              sed -E 's@^#.*$@@g' | \
+              sed -E 's@^(StageName=).*$@@g' | \
+              sed -E 's@^(BASE_URL=).*$@@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@@g' | \
+              sed -E 's@^(CognitoArnUser=).*$@@g' | \
+              sed -E 's@^(CognitoArnShop=).*$@@g'` \
+              StageName="${{ env.STAGE_NAME }}" \
+              BASE_URL="${{ secrets.URL }}" \
+              LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
+              CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
+              CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}" \
             > result.txt 2>&1
       
       - name: show create-changeset result
@@ -169,7 +178,14 @@ jobs:
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
             --template-file ${{ inputs.TEMPLATE_FILE }} \
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
-              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
-              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
-              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g' | \
-              sed -E 's@^(CognitoArnShop=).*$@\1"${{ secrets.COGNITO_ARN_SHOP }}"@g'`
+              sed -E 's@^#.*$@@g' | \
+              sed -E 's@^(StageName=).*$@@g' | \
+              sed -E 's@^(BASE_URL=).*$@@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@@g' | \
+              sed -E 's@^(CognitoArnUser=).*$@@g' | \
+              sed -E 's@^(CognitoArnShop=).*$@@g'` \
+              StageName="${{ env.STAGE_NAME }}" \
+              BASE_URL="${{ secrets.URL }}" \
+              LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
+              CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
+              CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}"

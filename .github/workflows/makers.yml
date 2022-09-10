@@ -19,7 +19,7 @@ jobs:
     with:
       STACK_NAME: makers-db
       WORKING_DIRECTORY: api/makers
-      TEMPLATE_FILE: db.yaml
+      TEMPLATE_FILE: db.yml
       CREATE_CHANGESET:
         ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
       DEPLOY:
@@ -31,6 +31,7 @@ jobs:
     uses: ./.github/workflows/called-sam.yml
     with:
       API_NAME: makers
+      TEMPLATE_FILE: sam.yml
       CREATE_CHANGESET:
         ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
       DEPLOY:

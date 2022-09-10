@@ -40,6 +40,7 @@ Conditions:
   UseTableStream: !Not [!Equals [!Ref StreamViewType, ""]]
 
 
+Resource:
 # DynamoDB
   MyTable:
     Type: AWS::DynamoDB::Table

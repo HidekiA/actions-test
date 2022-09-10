@@ -121,7 +121,7 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
-              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g'` | \
+              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g' | \
               sed -E 's@^(CognitoArnShop=).*$@\1"${{ secrets.COGNITO_ARN_SHOP }}"@g'` \
             > result.txt 2>&1
       
@@ -171,5 +171,5 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
               sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
-              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g'` | \
+              sed -E 's@^(CognitoArnUser=).*$@\1"${{ secrets.COGNITO_ARN_USER }}"@g' | \
               sed -E 's@^(CognitoArnShop=).*$@\1"${{ secrets.COGNITO_ARN_SHOP }}"@g'`

@@ -104,7 +104,7 @@ jobs:
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME }}" \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
+            --stack-name "${{ env.STACK_NAME }}" \
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
             --parameter-overrides StageName=${{ env.STAGE_NAME }} \
             > result.txt 2>&1
@@ -157,6 +157,6 @@ jobs:
             --role-arn ${{ secrets.DEPLOY_ROLE }} \
             --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
             --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME }}" \
-            --stack-name "${{ env.STACK_NAME_PREFIX }}${{ inputs.STACK_NAME }}" \
+            --stack-name "${{ env.STACK_NAME }}" \
             --capabilities ${{ inputs.CFN_CAPABILITIES }} \
             --parameter-overrides StageName=${{ env.STAGE_NAME }}

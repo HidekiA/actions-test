@@ -17,9 +17,9 @@ jobs:
   db:
     uses: ./.github/workflows/called-cfn.yml
     with:
-      STACK_NAME: makers
+      STACK_NAME: makers-db
       WORKING_DIRECTORY: api/makers
-      TEMPLATE_FILE: db.yml
+      TEMPLATE_FILE: db.yaml
       CREATE_CHANGESET:
         ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
       DEPLOY:

@@ -23,7 +23,7 @@ on:
       TEMPLATE_FILE:
         required: false
         type: string
-        default: template.yml
+        default: template.yaml
       PARAMETER_FILE:
         required: false
         type: string

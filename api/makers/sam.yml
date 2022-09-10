@@ -1,0 +1,284 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "General"
+        Parameters:
+          - ServiceName
+          - Version
+          - StageName
+      - Label:
+          default: "Resource name"
+        Parameters:
+          - ResourceName
+      - Label:
+          default: "Lambda"
+        Parameters:
+          - LambdaRuntime
+      - Label:
+          default: "Cognito"
+        Parameters:
+          - CognitoArnUser
+          - CognitoArnShop
+
+Parameters:
+# General
+  ServiceName:
+    Type: String
+    Default: sorakarabin
+  Version:
+    Description: "API version [v1 | v2 | v3 | ...]"
+    Type: String
+    AllowedPattern: "v[0-9]+"
+    Default: v1
+  StageName:
+    Description: "API stage [sandbox | tmp | dev | stg | prd]"
+    Type: String
+    AllowedValues:
+      - sandbox
+      - tmp
+      - dev
+      - stg
+      - prd
+    Default: tmp
+  BASE_URL:
+    Type: String
+    Default: ""
+# Resource name
+  ResourceName:
+    Type: String
+    Default: ""
+# Lambda
+  LambdaRuntime:
+    Type: String
+    Default: python3.9
+# Cognito
+  CognitoArnUser:
+    Description: "User Cognito ARN for API auth"
+    Type: String
+    Default: ""
+  CognitoArnShop:
+    Description: "Shop Cognito ARN for API auth"
+    Type: String
+    Default: ""
+
+
+Mappings:
+  Function:
+    DeploymentPreference:
+      sandbox: AllAtOnce
+      tmp: AllAtOnce
+      dev: AllAtOnce
+      stg: AllAtOnce
+      prd: Canary10Percent10Minutes
+    Timeout:
+      sandbox: 10
+      tmp: 10
+      dev: 10
+      stg: 10
+      prd: 10
+    PowerToolsLoggerLogEvent:
+      sandbox: "True"
+      tmp: "True"
+      dev: "True"
+      stg: "False"
+      prd: "False"
+    LogLevel:
+      sandbox: DEBUG
+      tmp: DEBUG
+      dev: DEBUG
+      stg: INFO
+      prd: INFO
+  LogGroup:
+    RetentionInDays:
+      sandbox: 30
+      tmp: 30
+      dev: 30
+      stg: 30
+      prd: 365
+  API:
+    AllowOrigin:
+      sandbox: "*"
+      tmp: "*"
+      dev: "*"
+      stg: "*"
+      prd: "*"
+      # prd: "https://www.sorakarabin.com"
+
+
+Conditions:
+  UseApiMapping: !Not [!Equals [!Ref BASE_URL, ""]]
+
+
+Globals:
+  Api:
+    Auth:
+      Authorizers:
+        AuthUser:
+          UserPoolArn: !Ref CognitoArnUser
+        AuthShop:
+          UserPoolArn: !Ref CognitoArnShop
+      AddDefaultAuthorizerToCorsPreflight: false
+    Cors:
+      AllowOrigin:
+        Fn::Sub:
+          - "'${Origin}'"
+          - Origin: !FindInMap [API, AllowOrigin, !Ref StageName]
+      AllowCredentials: true
+      AllowMethods: "'*'"
+      AllowHeaders: "'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key'"
+    TracingEnabled: true
+
+  Function:
+    Handler: app.lambda_handler
+    Runtime: !Ref LambdaRuntime
+    Architectures:
+      - x86_64
+    Tracing: Active
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Type: !FindInMap [Function, DeploymentPreference, !Ref StageName]
+    Timeout: !FindInMap [Function, Timeout, !Ref StageName]
+    Layers:
+      - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:33
+    Environment:
+      Variables:
+      # AWS Lambda Powertools
+        POWERTOOLS_SERVICE_NAME:
+          !Sub ${ServiceName}-${ResourceName}-${Version}
+        POWERTOOLS_LOGGER_LOG_EVENT:
+          !FindInMap [Function, PowerToolsLoggerLogEvent, !Ref StageName]
+        LOG_LEVEL:
+          !FindInMap [Function, LogLevel, !Ref StageName]
+        CORS_ORIGIN:
+          !FindInMap [API, AllowOrigin, !Ref StageName]
+        BASE_PATH:
+          !If
+            - UseApiMapping
+            - !Sub /${Version}/${ResourceName}
+            - ""
+      # DynamoDB
+        TABLE_NAME:
+          !Ref ResourceName
+
+
+Resources:
+# API Gateway
+  UserApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-UserApi
+      StageName: !Ref StageName
+      Auth:
+        DefaultAuthorizer: AuthUser
+      DisableExecuteApiEndpoint: !If [UseApiMapping, true, false]
+  UserApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: UseApiMapping
+    Properties:
+      DomainName: !Sub "user.api.${BASE_URL}"
+      ApiMappingKey: !Sub ${Version}/${ResourceName}
+      ApiId: !Ref UserApi
+      Stage: !Ref UserApi.Stage
+
+  ShopApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-ShopApi
+      StageName: !Ref StageName
+      Auth:
+        DefaultAuthorizer: AuthUser
+      DisableExecuteApiEndpoint: !If [UseApiMapping, true, false]
+  ShopApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: UseApiMapping
+    Properties:
+      DomainName: !Sub "shop.api.${BASE_URL}"
+      ApiMappingKey: !Sub ${Version}/${ResourceName}
+      ApiId: !Ref ShopApi
+      Stage: !Ref ShopApi.Stage
+
+# Lambda
+  UserGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/get/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ResourceName
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Method: get
+            RestApiId: !Ref UserApi
+            Path: /{param}
+  UserGetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${UserGetFunction}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+
+  ShopGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/get/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ResourceName
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Method: get
+            RestApiId: !Ref ShopApi
+            Path: /{param}
+  ShopGetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ShopGetFunction}
+      RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
+
+
+Outputs:
+# API
+  UserApiID:
+    Description: "API Gateway ID"
+    Value: !Ref UserApi
+    Export:
+      Name: !Sub "${AWS::StackName}-UserApi-ID"
+  UserApiEndpoint:
+    Description: "Endpoint URL"
+    Value:
+      Fn::If:
+        - UseApiMapping
+        - Fn::Sub:
+          - "https://${ApiDomain}/${Version}/${ResourceName}/"
+          - ApiDomain: !Sub "user.api.${BASE_URL}"
+            Version: !Ref Version
+            ResourceName: !Ref ResourceName
+        - !Sub "https://${UserApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-UserApi-URL"
+      
+  ShopApiID:
+    Description: "API Gateway ID"
+    Value: !Ref ShopApi
+    Export:
+      Name: !Sub "${AWS::StackName}-ShopApi-ID"
+  ShopApiEndpoint:
+    Description: "Endpoint URL"
+    Value:
+      Fn::If:
+        - UseApiMapping
+        - Fn::Sub:
+          - "https://${ApiDomain}/${Version}/${ResourceName}/"
+          - ApiDomain: !Sub "shop.api.${BASE_URL}"
+            Version: !Ref Version
+            ResourceName: !Ref ResourceName
+        - !Sub "https://${ShopApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ShopApi-URL"

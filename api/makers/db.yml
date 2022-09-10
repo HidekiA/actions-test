@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Description: "DynamoDB"
 
 Parameters:
-  TableName:
+  ResourceName:
     Type: String
     Default: "makers"
   PartitionKeyName:
@@ -32,24 +33,21 @@ Parameters:
       - OLD_IMAGE
     Default: ""
 
-
 Conditions:
-  UseTableSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
-  UseTableStream: !Not [!Equals [!Ref StreamViewType, ""]]
-
+  UseSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
+  UseStream: !Not [!Equals [!Ref StreamViewType, ""]]
 
 Resources:
-# DynamoDB
   MyTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     Properties:
-      TableName: !Ref TableName
+      TableName: !Ref ResourceName
       AttributeDefinitions:
         - AttributeName: !Ref PartitionKeyName
           AttributeType: !Ref PartitionKeyType
         - !If
-          - UseTableSortKey
+          - UseSortKey
           - AttributeName: !Ref SortKeyName
             AttributeType: !Ref SortKeyType
           - !Ref AWS::NoValue
@@ -57,7 +55,7 @@ Resources:
         - AttributeName: !Ref PartitionKeyName
           KeyType: HASH # Partition key
         - !If
-          - UseTableSortKey
+          - UseSortKey
           - AttributeName: !Ref SortKeyName
             KeyType: RANGE # Sort key
           - !Ref AWS::NoValue
@@ -71,6 +69,24 @@ Resources:
         Enabled: false
       StreamSpecification:
         !If
-          - UseTableStream
+          - UseStream
           - StreamViewType: !Ref StreamViewType
           - !Ref AWS::NoValue
+
+Outputs:
+  DynamoDBTableName:
+    Description: "DynamoDB Table name"
+    Value: !Ref MyTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TableName"
+  DynamoDBTableArn:
+    Description: "DynamoDB Table ARN"
+    Value: !GetAtt MyTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableArn"
+  DynamoDBStreamArn:
+    Description: "DynamoDB Stream ARN"
+    Condition: UseTableStream
+    Value: !GetAtt MyTable.StreamArn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableStreamArn"

@@ -1,14 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: "Rest API with DynamoDB"
 
 Parameters:
   TableName:
     Type: String
-    Default: ""
+    Default: "makers"
   PartitionKeyName:
     Type: String
-    Default: ""
+    Default: "makerId"
   PartitionKeyType:
     Description: "[S (String) | N (Number) | B (Boolean)]"
     Type: String
@@ -40,7 +38,7 @@ Conditions:
   UseTableStream: !Not [!Equals [!Ref StreamViewType, ""]]
 
 
-Resource:
+Resources:
 # DynamoDB
   MyTable:
     Type: AWS::DynamoDB::Table

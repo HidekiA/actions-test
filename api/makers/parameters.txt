@@ -6,4 +6,4 @@ PartitionKeyName=makerId
 PartitionKeyType=S
 SortKeyName=""
 SortKeyType=S
-StreamViewType=""
+StreamViewType=KEYS_ONLY

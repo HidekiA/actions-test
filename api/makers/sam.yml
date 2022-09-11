@@ -210,7 +210,7 @@ Resources:
         Get:
           Type: Api
           Properties:
-            Method: get
+            Method: post
             RestApiId: !Ref UserApi
             Path: /{param}
   UserGetFunctionLogGroup:
@@ -219,7 +219,7 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${UserGetFunction}
       RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
 
-  ShopGetFunction:
+  ShopPostFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/get/
@@ -230,13 +230,13 @@ Resources:
         Get:
           Type: Api
           Properties:
-            Method: get
+            Method: post
             RestApiId: !Ref ShopApi
             Path: /{param}
-  ShopGetFunctionLogGroup:
+  ShopPostFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${ShopGetFunction}
+      LogGroupName: !Sub /aws/lambda/${ShopPostFunction}
       RetentionInDays: !FindInMap [LogGroup, RetentionInDays, !Ref StageName]
 
 

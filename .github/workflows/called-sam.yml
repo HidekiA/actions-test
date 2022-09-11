@@ -81,6 +81,7 @@ jobs:
       STACK_NAME: ${{ inputs.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
       # STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
       STAGE_NAME: sandbox
+      LAMBDA_RUNTIME: python${{ inputs.PYTHON_VERSION }}
     defaults:
       run:
         working-directory: api/${{ inputs.API_NAME }}
@@ -129,7 +130,7 @@ jobs:
               sed -E 's@^(CognitoArnShop=).*$@@g'` \
               StageName="${{ env.STAGE_NAME }}" \
               BaseURL="${{ secrets.URL }}" \
-              LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
+              LambdaRuntime="${{ env.LAMBDA_RUNTIME }}" \
               CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
               CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}" \
             > result.txt 2>&1
@@ -186,6 +187,6 @@ jobs:
               sed -E 's@^(CognitoArnShop=).*$@@g'` \
               StageName="${{ env.STAGE_NAME }}" \
               BaseURL="${{ secrets.URL }}" \
-              LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
+              LambdaRuntime="${{ env.LAMBDA_RUNTIME }}" \
               CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
               CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}"

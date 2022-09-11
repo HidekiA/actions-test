@@ -1,4 +1,5 @@
-name: test trigger
+name: always
+
 on:
   workflow_dispatch:
   push:

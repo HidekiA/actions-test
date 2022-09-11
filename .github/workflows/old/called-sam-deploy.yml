@@ -1,0 +1,178 @@
+name: Called SAM
+
+on:
+  workflow_call:
+    inputs:
+      # dry-run / execute
+      CREATE_CHANGESET:
+        required: true
+        type: boolean
+        default: false
+      DEPLOY:
+        required: true
+        type: boolean
+        default: false
+
+      # API settings
+      API_NAME:
+        required: true
+        type: string
+      COGNITO_USER_POOL:
+        required: true
+        type: string
+        description: user | shop
+
+      # optional
+      ADDITIONAL_PARAMETERS:
+        required: false
+        type: string
+        default: ''
+      PARAMETER_FILE:
+        required: false
+        type: string
+        default: 'parameters.txt'
+      STACK_NAME_PREFIX:
+        required: false
+        type: string
+        default: 'cicd-api-'
+      AWS_REGION:
+        required: false
+        type: string
+        default: ap-northeast-1
+      SAM_CAPABILITIES:
+        required: false
+        type: string
+        default: CAPABILITY_IAM
+      PYTHON_VERSION:
+        required: false
+        type: string
+        default: '3.9'
+
+    secrets:
+      ACTION_ROLE:
+        required: true
+      DEPLOY_ROLE:
+        required: true
+      TEMPLATE_BUCKET:
+        required: true
+      COGNITO_ARN_USER:
+        required: true
+      COGNITO_ARN_SHOP:
+        required: true
+      AWS_ACCOUNT_ID:
+        required: true
+
+
+permissions: 
+  contents: read
+  id-token: write
+  pull-requests: write
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: inputs.CREATE_CHANGESET || inputs.DEPLOY
+    timeout-minutes: 20
+    environment:
+      name: ${{ github.event.pull_request.base.ref || github.ref_name }}
+    env:
+      STACK_NAME: ${{ inputs.STACK_NAME_PREFIX }}${{ inputs.API_NAME }}
+      # STAGE_NAME: ${{ github.event.pull_request.base.ref || github.ref_name }}
+      STAGE_NAME: sandbox
+      COGNITO_ARN: >-
+        ${{ 
+          (inputs.COGNITO_USER_POOL == 'user' && secrets.COGNITO_ARN_USER) || 
+          (inputs.COGNITO_USER_POOL == 'shop' && secrets.COGNITO_ARN_SHOP) ||
+          ''
+        }}
+    defaults:
+      run:
+        working-directory: api/${{ inputs.API_NAME }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.PYTHON_VERSION }}
+      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ inputs.AWS_REGION }}
+
+      - name: cli version & id
+        run: |-
+          aws --version
+          sam --version
+          aws sts get-caller-identity
+
+      - name: sam build
+        run: sam build --use-container
+
+      # Create & show changeset
+      - name: create changeset
+        id: create_changeset
+        if: inputs.CREATE_CHANGESET
+        run: |-
+          sam deploy \
+            --no-execute-changeset \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
+            --stack-name ${{ env.STACK_NAME }} \
+            --capabilities ${{ inputs.SAM_CAPABILITIES }} \
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
+              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
+              sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
+              ${{ inputs.ADDITIONAL_PARAMETERS }} \
+            > result.txt 2>&1
+      
+      - name: show create-changeset result
+        if: inputs.CREATE_CHANGESET && always()
+        run: |-
+          cat result.txt
+
+      - name: store create-changeset result
+        if: inputs.CREATE_CHANGESET
+        run: |-
+          echo "CHANGESET_REPORT<<EOF" >> $GITHUB_ENV
+          cat result.txt | sed -z 's@.*CloudFormation stack changeset\n\(.*\)\nChangeset created.*@\1@g' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Comment on Pull Request
+        uses: actions/github-script@v6
+        if: inputs.CREATE_CHANGESET && github.event_name == 'pull_request'
+        with:
+          script: |
+            const report = `${{ env.CHANGESET_REPORT }}`;
+            const body = '## ${{ env.STACK_NAME }} changeset\n' +
+              (report.match(/No changes to deploy./) ? '### No changes to deploy.\n' : ('```\n' + report + '\n```\n')) + 
+              '*Pusher: @${{ github.actor }}*';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      # Deploy
+      - name: sam deploy
+        if: inputs.DEPLOY
+        run: |-
+          sam deploy \
+            --no-confirm-changeset --force-upload \
+            --no-fail-on-empty-changeset \
+            --no-disable-rollback \
+            --role-arn ${{ secrets.DEPLOY_ROLE }} \
+            --s3-bucket ${{ secrets.TEMPLATE_BUCKET }} \
+            --s3-prefix "${{ secrets.AWS_ACCOUNT_ID }}/${{ env.STACK_NAME }}-${{ env.STAGE_NAME}}" \
+            --stack-name ${{ env.STACK_NAME }} \
+            --capabilities ${{ inputs.SAM_CAPABILITIES }} \
+            --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
+              sed -E 's@^(StageName=).*$@\1"${{ env.STAGE_NAME }}"@g' | \
+              sed -E 's@^(LambdaRuntime=).*$@\1"python${{ inputs.PYTHON_VERSION }}"@g' | \
+              sed -E 's@^(CognitoArn=).*$@\1"${{ env.COGNITO_ARN }}"@g'` \
+              ${{ inputs.ADDITIONAL_PARAMETERS }}

@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "DynamoDB"
+
+Parameters:
+  ApiName:
+    Description: "API name is also used as table name"
+    Type: String
+    Default: ""
+  PartitionKeyName:
+    Type: String
+    Default: ""
+  PartitionKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  SortKeyName:
+    Description: "Keep blank to disable sort key"
+    Type: String
+    Default: ""
+  SortKeyType:
+    Description: "[S (String) | N (Number) | B (Boolean)]"
+    Type: String
+    AllowedPattern: "S|N|B"
+    Default: S
+  StreamViewType:
+    Description: "Blank or [KEYS_ONLY | NEW_AND_OLD_IMAGES | NEW_IMAGE | OLD_IMAGE]"
+    Type: String
+    AllowedValues:
+      - ""
+      - KEYS_ONLY
+      - NEW_AND_OLD_IMAGES
+      - NEW_IMAGE
+      - OLD_IMAGE
+    Default: ""
+  # Available parameters in GitHub Actions
+  # StageName:
+  #   Type: String
+  # BaseURL:
+  #   Type: String
+
+Conditions:
+  UseSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
+  UseStream: !Not [!Equals [!Ref StreamViewType, ""]]
+
+Resources:
+  MyTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Ref ApiName
+      AttributeDefinitions:
+        - AttributeName: !Ref PartitionKeyName
+          AttributeType: !Ref PartitionKeyType
+        - !If
+          - UseSortKey
+          - AttributeName: !Ref SortKeyName
+            AttributeType: !Ref SortKeyType
+          - !Ref AWS::NoValue
+      KeySchema:
+        - AttributeName: !Ref PartitionKeyName
+          KeyType: HASH # Partition key
+        - !If
+          - UseSortKey
+          - AttributeName: !Ref SortKeyName
+            KeyType: RANGE # Sort key
+          - !Ref AWS::NoValue
+      TableClass: STANDARD
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      ContributorInsightsSpecification:
+        Enabled: false
+      StreamSpecification:
+        !If
+          - UseStream
+          - StreamViewType: !Ref StreamViewType
+          - !Ref AWS::NoValue
+
+Outputs:
+  DynamoDBTableName:
+    Description: "DynamoDB Table name"
+    Value: !Ref MyTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TableName"
+  DynamoDBTableArn:
+    Description: "DynamoDB Table ARN"
+    Value: !GetAtt MyTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableArn"
+  DynamoDBStreamArn:
+    Description: "DynamoDB Stream ARN"
+    Condition: UseStream
+    Value: !GetAtt MyTable.StreamArn
+    Export:
+      Name: !Sub "${AWS::StackName}-TableStreamArn"

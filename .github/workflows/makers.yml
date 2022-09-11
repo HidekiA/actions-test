@@ -1,0 +1,39 @@
+name: api-makers
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    branches: [dev, stg, prd]
+    paths:
+      - api/makers/**
+  push:
+    branches: [sandbox]
+    paths:
+      - api/makers/**
+
+
+jobs:
+  db:
+    uses: ./.github/workflows/called-cfn.yml
+    with:
+      STACK_NAME: makers-db
+      WORKING_DIRECTORY: api/makers
+      TEMPLATE_FILE: db.yml
+      CREATE_CHANGESET:
+        ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
+      DEPLOY:
+        ${{ github.event_name != 'pull_request' || github.event.pull_request.merged }}
+    secrets: inherit
+
+  api:
+    needs: db
+    uses: ./.github/workflows/called-sam.yml
+    with:
+      API_NAME: makers
+      TEMPLATE_FILE: sam.yml
+      CREATE_CHANGESET:
+        ${{ github.event_name == 'pull_request' && github.event.pull_request.state == 'open' }}
+      DEPLOY:
+        ${{ github.event_name != 'pull_request' || github.event.pull_request.merged }}
+    secrets: inherit

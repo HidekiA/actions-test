@@ -1,7 +1,6 @@
 from typing import Any, Dict
 import os
 import boto3
-from boto3.dynamodb.conditions import Attr
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.event_handler.api_gateway import APIGatewayRestResolver, CORSConfig
@@ -12,7 +11,8 @@ from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
 logger = Logger()
 tracer = Tracer()
 cors_config = CORSConfig(allow_origin=os.environ['CORS_ORIGIN'], max_age=300)
-app = APIGatewayRestResolver(cors=cors_config, strip_prefixes=[os.environ['BASE_PATH']])
+app = APIGatewayRestResolver(cors=cors_config, strip_prefixes=[
+                             os.environ['BASE_PATH']])
 
 # resource table
 table = boto3.resource('dynamodb').Table(os.environ['TABLE_NAME'])
@@ -28,12 +28,6 @@ def lambda_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[
 @app.get('/')
 @tracer.capture_method
 def get():
-    data = table.scan(
-        FilterExpression=Attr('visible').eq(True)
-    )
+    data = table.scan()
     logger.debug(data)
-    
-    for x in data['Items']:
-        del x['visible']
-
     return {'message': data['Items']}

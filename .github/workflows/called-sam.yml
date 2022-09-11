@@ -104,7 +104,7 @@ jobs:
 
       # Build
       - name: sam build
-        run: sam build --use-container
+        run: sam build --use-container --template-file ${{ inputs.TEMPLATE_FILE }}
 
       # Create & show changeset
       - name: create changeset

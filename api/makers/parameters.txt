@@ -1,6 +1,5 @@
 ServiceName=sorakarabin
 Version=v1
-LambdaRuntime=python3.9
 # db
 ApiName=makers
 PartitionKeyName=makerId

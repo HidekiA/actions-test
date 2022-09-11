@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "DynamoDB"
+Description: "Create DynamoDB for REST API"
 
 Parameters:
   ApiName:
-    Description: "API name is also used as table name"
+    Description: "API name is used as table name"
     Type: String
     Default: ""
   PartitionKeyName:

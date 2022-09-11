@@ -109,9 +109,11 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^#.*$@@g' | \
               sed -E 's@^(StageName=).*$@@g' | \
-              sed -E 's@^(BASE_URL=).*$@@g'` \
-              StageName="${{ env.STAGE_NAME }}" \
-              BASE_URL="${{ secrets.URL }}" \
+              sed -E 's@^(BaseURL=).*$@@g' | \
+              sed -E 's@^([^=]+)=([^$]+)$@"\1"="\2"@g' | \
+              sed -E 's@""(.*)""@"\1"@g` \
+              "StageName"="${{ env.STAGE_NAME }}" \
+              "BaseURL"="${{ secrets.URL }}" \
             > result.txt 2>&1
 
       - name: show create-changeset result
@@ -167,6 +169,8 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^#.*$@@g' | \
               sed -E 's@^(StageName=).*$@@g' | \
-              sed -E 's@^(BASE_URL=).*$@@g'` \
-              StageName="${{ env.STAGE_NAME }}" \
-              BASE_URL="${{ secrets.URL }}"
+              sed -E 's@^(BaseURL=).*$@@g' | \
+              sed -E 's@^([^=]+)=([^$]+)$@"\1"="\2"@g' | \
+              sed -E 's@""(.*)""@"\1"@g` \
+              "StageName"="${{ env.STAGE_NAME }}" \
+              "BaseURL"="${{ secrets.URL }}"

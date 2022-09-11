@@ -123,12 +123,12 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^#.*$@@g' | \
               sed -E 's@^(StageName=).*$@@g' | \
-              sed -E 's@^(BASE_URL=).*$@@g' | \
+              sed -E 's@^(BaseURL=).*$@@g' | \
               sed -E 's@^(LambdaRuntime=).*$@@g' | \
               sed -E 's@^(CognitoArnUser=).*$@@g' | \
               sed -E 's@^(CognitoArnShop=).*$@@g'` \
               StageName="${{ env.STAGE_NAME }}" \
-              BASE_URL="${{ secrets.URL }}" \
+              BaseURL="${{ secrets.URL }}" \
               LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
               CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
               CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}" \
@@ -180,12 +180,12 @@ jobs:
             --parameter-overrides `cat ${{ inputs.PARAMETER_FILE }} | \
               sed -E 's@^#.*$@@g' | \
               sed -E 's@^(StageName=).*$@@g' | \
-              sed -E 's@^(BASE_URL=).*$@@g' | \
+              sed -E 's@^(BaseURL=).*$@@g' | \
               sed -E 's@^(LambdaRuntime=).*$@@g' | \
               sed -E 's@^(CognitoArnUser=).*$@@g' | \
               sed -E 's@^(CognitoArnShop=).*$@@g'` \
               StageName="${{ env.STAGE_NAME }}" \
-              BASE_URL="${{ secrets.URL }}" \
+              BaseURL="${{ secrets.URL }}" \
               LambdaRuntime="${{ inputs.PYTHON_VERSION }}" \
               CognitoArnUser="${{ secrets.COGNITO_ARN_USER }}" \
               CognitoArnShop="${{ secrets.COGNITO_ARN_SHOP }}"

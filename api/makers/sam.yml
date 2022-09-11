@@ -5,15 +5,13 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "General"
+          default: "API"
         Parameters:
+          - ApiName
           - ServiceName
           - Version
           - StageName
-      - Label:
-          default: "Resource name"
-        Parameters:
-          - ResourceName
+          - BaseURL
       - Label:
           default: "Lambda"
         Parameters:
@@ -25,7 +23,10 @@ Metadata:
           - CognitoArnShop
 
 Parameters:
-# General
+# API
+  ApiName:
+    Type: String
+    Default: ""
   ServiceName:
     Type: String
     Default: sorakarabin
@@ -44,11 +45,7 @@ Parameters:
       - stg
       - prd
     Default: tmp
-  BASE_URL:
-    Type: String
-    Default: ""
-# Resource name
-  ResourceName:
+  BaseURL:
     Type: String
     Default: ""
 # Lambda
@@ -110,7 +107,7 @@ Mappings:
 
 
 Conditions:
-  UseApiMapping: !Not [!Equals [!Ref BASE_URL, ""]]
+  UseApiMapping: !Not [!Equals [!Ref BaseURL, ""]]
 
 
 Globals:
@@ -148,7 +145,7 @@ Globals:
       Variables:
       # AWS Lambda Powertools
         POWERTOOLS_SERVICE_NAME:
-          !Sub ${ServiceName}-${ResourceName}-${Version}
+          !Sub ${ServiceName}-${ApiName}-${Version}
         POWERTOOLS_LOGGER_LOG_EVENT:
           !FindInMap [Function, PowerToolsLoggerLogEvent, !Ref StageName]
         LOG_LEVEL:
@@ -158,11 +155,11 @@ Globals:
         BASE_PATH:
           !If
             - UseApiMapping
-            - !Sub /${Version}/${ResourceName}
+            - !Sub /${Version}/${ApiName}
             - ""
       # DynamoDB
         TABLE_NAME:
-          !Ref ResourceName
+          !Ref ApiName
 
 
 Resources:
@@ -179,8 +176,8 @@ Resources:
     Type: AWS::ApiGatewayV2::ApiMapping
     Condition: UseApiMapping
     Properties:
-      DomainName: !Sub "user.api.${BASE_URL}"
-      ApiMappingKey: !Sub ${Version}/${ResourceName}
+      DomainName: !Sub "user.api.${BaseURL}"
+      ApiMappingKey: !Sub ${Version}/${ApiName}
       ApiId: !Ref UserApi
       Stage: !Ref UserApi.Stage
 
@@ -196,8 +193,8 @@ Resources:
     Type: AWS::ApiGatewayV2::ApiMapping
     Condition: UseApiMapping
     Properties:
-      DomainName: !Sub "shop.api.${BASE_URL}"
-      ApiMappingKey: !Sub ${Version}/${ResourceName}
+      DomainName: !Sub "shop.api.${BaseURL}"
+      ApiMappingKey: !Sub ${Version}/${ApiName}
       ApiId: !Ref ShopApi
       Stage: !Ref ShopApi.Stage
 
@@ -208,7 +205,7 @@ Resources:
       CodeUri: src/get/
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref ResourceName
+            TableName: !Ref ApiName
       Events:
         Get:
           Type: Api
@@ -228,7 +225,7 @@ Resources:
       CodeUri: src/get/
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref ResourceName
+            TableName: !Ref ApiName
       Events:
         Get:
           Type: Api
@@ -256,10 +253,10 @@ Outputs:
       Fn::If:
         - UseApiMapping
         - Fn::Sub:
-          - "https://${ApiDomain}/${Version}/${ResourceName}/"
-          - ApiDomain: !Sub "user.api.${BASE_URL}"
+          - "https://${ApiDomain}/${Version}/${ApiName}/"
+          - ApiDomain: !Sub "user.api.${BaseURL}"
             Version: !Ref Version
-            ResourceName: !Ref ResourceName
+            ApiName: !Ref ApiName
         - !Sub "https://${UserApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/"
     Export:
       Name: !Sub "${AWS::StackName}-UserApi-URL"
@@ -275,10 +272,10 @@ Outputs:
       Fn::If:
         - UseApiMapping
         - Fn::Sub:
-          - "https://${ApiDomain}/${Version}/${ResourceName}/"
-          - ApiDomain: !Sub "shop.api.${BASE_URL}"
+          - "https://${ApiDomain}/${Version}/${ApiName}/"
+          - ApiDomain: !Sub "shop.api.${BaseURL}"
             Version: !Ref Version
-            ResourceName: !Ref ResourceName
+            ApiName: !Ref ApiName
         - !Sub "https://${ShopApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/"
     Export:
       Name: !Sub "${AWS::StackName}-ShopApi-URL"

@@ -2,8 +2,8 @@ ServiceName=sorakarabin
 Version=v1
 LambdaRuntime=python3.9
 # db
-ResourceName=makers
-PartitionKeyName=makerId
+ApiName=makers
+PartitionKeyName="makerId"
 PartitionKeyType=S
 SortKeyName=""
 SortKeyType=S

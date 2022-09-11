@@ -2,12 +2,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: "DynamoDB"
 
 Parameters:
-  ResourceName:
+  ApiName:
+    Description: "API name is also used as table name"
     Type: String
-    Default: "makers"
+    Default: ""
   PartitionKeyName:
     Type: String
-    Default: "makerId"
+    Default: ""
   PartitionKeyType:
     Description: "[S (String) | N (Number) | B (Boolean)]"
     Type: String
@@ -32,6 +33,11 @@ Parameters:
       - NEW_IMAGE
       - OLD_IMAGE
     Default: ""
+  # Available parameters in GitHub Actions
+  # StageName:
+  #   Type: String
+  # BaseURL:
+  #   Type: String
 
 Conditions:
   UseSortKey: !Not [!Equals [!Ref SortKeyName, ""]]
@@ -42,7 +48,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     Properties:
-      TableName: !Ref ResourceName
+      TableName: !Ref ApiName
       AttributeDefinitions:
         - AttributeName: !Ref PartitionKeyName
           AttributeType: !Ref PartitionKeyType
@@ -86,7 +92,7 @@ Outputs:
       Name: !Sub "${AWS::StackName}-TableArn"
   DynamoDBStreamArn:
     Description: "DynamoDB Stream ARN"
-    Condition: UseTableStream
+    Condition: UseStream
     Value: !GetAtt MyTable.StreamArn
     Export:
       Name: !Sub "${AWS::StackName}-TableStreamArn"
